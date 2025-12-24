@@ -88,6 +88,7 @@ export default function ScanPage() {
     return () => {
       mounted = false;
       if (scannerRef.current) {
+        // We use catch here to prevent unhandled promise rejections during unmount
         scannerRef.current.stop().catch((err: any) => console.warn("Scanner Cleanup Error", err));
         scannerRef.current.clear().catch((err: any) => console.warn("Scanner Clear Error", err));
       }
@@ -120,14 +121,19 @@ export default function ScanPage() {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    const result = collectTreasureLocal(userId, treasureInput);
-
-    // Fully stop scanner after processing
+    // Fully stop scanner BEFORE updating state to success/error
+    // This prevents the "Client-side exception" where the DOM element is removed while camera is still active
     if (scannerRef.current) {
-      scannerRef.current.stop().catch(console.error);
-      scannerRef.current.clear().catch(console.error);
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+      } catch (err) {
+        console.warn("Failed to stop scanner cleanly", err);
+      }
       scannerRef.current = null;
     }
+
+    const result = collectTreasureLocal(userId, treasureInput);
 
     if (result.success) {
       setStatus('success');
@@ -155,7 +161,7 @@ export default function ScanPage() {
 
       <div className="scanner-wrapper card">
         {/* Only render this specific div when scanning */}
-        {status === 'scanning' && <div id="reader"></div>}
+        {status === 'scanning' && <div id="reader" style={{ width: '100%', minHeight: '300px' }}></div>}
 
         {status === 'processing' && (
           <div className="flex-center" style={{ flexDirection: 'column', padding: '3rem', gap: '1rem' }}>

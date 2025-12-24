@@ -1,64 +1,44 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { db, auth } from '@/lib/firebase';
-import { doc, onSnapshot, collection, query, where, getDocs } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import { getCurrentUserId, getUserData, getTreasureByUuid, UserData, Treasure } from '@/lib/storage';
 import { Award, Trophy, MapPin, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
-interface UserData {
-  collectedTreasures: string[];
-  totalPoints: number;
-}
-
-interface TreasureInfo {
-  uuid: string;
-  name: string;
-  points: number;
-}
+interface TreasureInfo extends Treasure { }
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<any>(null); // keeping 'user' name for consistency, though it's just ID or null
   const [userData, setUserData] = useState<UserData | null>(null);
   const [treasuresInfo, setTreasuresInfo] = useState<Record<string, TreasureInfo>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      if (!u) setLoading(false);
-    });
-    return () => unsubscribe();
+    const uid = getCurrentUserId();
+    if (uid) {
+      setUser({ uid });
+      loadData(uid);
+    } else {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
+  const loadData = (uid: string) => {
+    const data = getUserData(uid);
+    setUserData(data);
 
-    // Listen to user data
-    const userRef = doc(db, 'users', user.uid);
-    const unsubscribe = onSnapshot(userRef, async (snap) => {
-      if (snap.exists()) {
-        const data = snap.data() as UserData;
-        setUserData(data);
-        
-        // Fetch treasure details if we don't have them
-        if (data.collectedTreasures?.length > 0) {
-          const q = query(collection(db, 'treasures'), where("uuid", "in", data.collectedTreasures));
-          const tSnap = await getDocs(q);
-          const info: Record<string, TreasureInfo> = {};
-          tSnap.forEach(d => {
-            const tData = d.data() as TreasureInfo;
-            info[tData.uuid] = tData;
-          });
-          setTreasuresInfo(info);
+    if (data.collectedTreasures?.length > 0) {
+      const info: Record<string, TreasureInfo> = {};
+      data.collectedTreasures.forEach(uuid => {
+        const t = getTreasureByUuid(uuid);
+        if (t) {
+          info[uuid] = t;
         }
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [user]);
+      });
+      setTreasuresInfo(info);
+    }
+    setLoading(false);
+  };
 
   if (loading) {
     return (
@@ -84,45 +64,45 @@ export default function DashboardPage() {
     <div className="dashboard-container">
       <header style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-            <Link href="/" style={{ color: 'white' }}><ArrowLeft /></Link>
-            <h1 style={{ margin: 0, fontSize: '1.75rem' }}>My Collection</h1>
+          <Link href="/" style={{ color: 'white' }}><ArrowLeft /></Link>
+          <h1 style={{ margin: 0, fontSize: '1.75rem' }}>My Collection</h1>
         </div>
-        
+
         <div className="card stats-grid">
-            <div className="stat-item">
-                <Trophy size={24} color="#fbbf24" />
-                <div>
-                    <div className="stat-label">Total Points</div>
-                    <div className="stat-value">{userData.totalPoints}</div>
-                </div>
+          <div className="stat-item">
+            <Trophy size={24} color="#fbbf24" />
+            <div>
+              <div className="stat-label">Total Points</div>
+              <div className="stat-value">{userData.totalPoints}</div>
             </div>
-            <div className="stat-item">
-                <Award size={24} color="var(--primary)" />
-                <div>
-                    <div className="stat-label">Stamps Found</div>
-                    <div className="stat-value">{userData.collectedTreasures.length}</div>
-                </div>
+          </div>
+          <div className="stat-item">
+            <Award size={24} color="var(--primary)" />
+            <div>
+              <div className="stat-label">Stamps Found</div>
+              <div className="stat-value">{userData.collectedTreasures.length}</div>
             </div>
+          </div>
         </div>
       </header>
 
       <section>
         <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Discovered Treasures</h2>
         <div className="treasures-grid">
-           {userData.collectedTreasures.map((uuid) => {
-             const info = treasuresInfo[uuid];
-             return (
-               <div key={uuid} className="card treasure-card">
-                 <div className="flex-center icon-circle">
-                   <MapPin size={24} color="white" />
-                 </div>
-                 <div style={{ flex: 1 }}>
-                   <div style={{ fontWeight: 600 }}>{info?.name || 'Unknown Treasure'}</div>
-                   <div style={{ fontSize: '0.875rem', opacity: 0.6 }}>+{info?.points || 0} pts</div>
-                 </div>
-               </div>
-             );
-           })}
+          {userData.collectedTreasures.map((uuid) => {
+            const info = treasuresInfo[uuid];
+            return (
+              <div key={uuid} className="card treasure-card">
+                <div className="flex-center icon-circle">
+                  <MapPin size={24} color="white" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600 }}>{info?.name || 'Unknown Treasure'}</div>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.6 }}>+{info?.points || 0} pts</div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 

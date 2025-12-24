@@ -2,15 +2,13 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { collectTreasure } from '@/app/actions/collect';
-import { auth } from '@/lib/firebase';
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { collectTreasureLocal, getCurrentUserId } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ScanPage() {
-  const [user, setUser] = useState<any>(null);
+  const [userId, setUserId] = useState<string>('');
   const [status, setStatus] = useState<'idle' | 'scanning' | 'processing' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [points, setPoints] = useState(0);
@@ -18,20 +16,13 @@ export default function ScanPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // 1. Sign in anonymously if not already
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUser(user);
-      } else {
-        signInAnonymously(auth).catch(console.error);
-      }
-    });
-
-    return () => unsubscribe();
+    // 1. Get local user ID
+    const uid = getCurrentUserId();
+    setUserId(uid);
   }, []);
 
   useEffect(() => {
-    if (!user || status !== 'idle') return;
+    if (!userId || status !== 'idle') return;
 
     // 2. Initialize Scanner
     const scanner = new Html5QrcodeScanner(
@@ -46,7 +37,7 @@ export default function ScanPage() {
 
     function onScanSuccess(decodedText: string) {
       if (status === 'processing') return;
-      
+
       handleScan(decodedText);
       // Clean up scanner after successful scan to prevent multiple triggers
       if (scannerRef.current) {
@@ -63,12 +54,16 @@ export default function ScanPage() {
         scannerRef.current.clear().catch(console.error);
       }
     };
-  }, [user, status]);
+  }, [userId, status]);
 
   const handleScan = async (uuid: string) => {
     setStatus('processing');
-    const result = await collectTreasure(user.uid, uuid);
-    
+
+    // Simulate network delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    const result = collectTreasureLocal(userId, uuid);
+
     if (result.success) {
       setStatus('success');
       setMessage(result.message);
@@ -93,7 +88,7 @@ export default function ScanPage() {
 
       <div className="scanner-wrapper card">
         {status === 'scanning' && <div id="reader"></div>}
-        
+
         {status === 'processing' && (
           <div className="flex-center" style={{ flexDirection: 'column', padding: '3rem', gap: '1rem' }}>
             <Loader2 className="animate-spin" size={48} color="var(--primary)" />

@@ -1,18 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
-import { v4 as uuidv4 } from 'uuid';
+import { getTreasures, addTreasure, Treasure } from '@/lib/storage';
 import { QRCodeSVG } from 'qrcode.react';
 import { Plus, Trash2, Download, QrCode as QrIcon } from 'lucide-react';
-
-interface Treasure {
-  id: string;
-  uuid: string;
-  name: string;
-  points: number;
-}
 
 export default function AdminPage() {
   const [treasures, setTreasures] = useState<Treasure[]>([]);
@@ -21,34 +12,33 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const q = query(collection(db, 'treasures'), orderBy('name'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Treasure[];
-      setTreasures(docs);
-    });
-    return () => unsubscribe();
+    loadTreasures();
   }, []);
+
+  const loadTreasures = () => {
+    const list = getTreasures();
+    // Sort by name for consistency
+    list.sort((a, b) => a.name.localeCompare(b.name));
+    setTreasures(list);
+  };
 
   const handleAddTreasure = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName) return;
-    
+
     setLoading(true);
     try {
-      await addDoc(collection(db, 'treasures'), {
-        uuid: uuidv4(),
-        name: newName,
-        points: newPoints,
-        createdAt: new Date().toISOString()
-      });
+      // Simulate delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      addTreasure(newName, newPoints);
+
       setNewName('');
       setNewPoints(10);
+      loadTreasures();
     } catch (error) {
       console.error("Error adding treasure:", error);
-      alert("Failed to add treasure. Check console.");
+      alert("Failed to add treasure.");
     } finally {
       setLoading(false);
     }
@@ -86,20 +76,20 @@ export default function AdminPage() {
         <form onSubmit={handleAddTreasure}>
           <div className="input-group">
             <label>Treasure Name (e.g., Sofa, Bookshelf)</label>
-            <input 
-              type="text" 
-              value={newName} 
-              onChange={(e) => setNewName(e.target.value)} 
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
               placeholder="Enter location or name"
               disabled={loading}
             />
           </div>
           <div className="input-group">
             <label>Points</label>
-            <input 
-              type="number" 
-              value={newPoints} 
-              onChange={(e) => setNewPoints(parseInt(e.target.value))} 
+            <input
+              type="number"
+              value={newPoints}
+              onChange={(e) => setNewPoints(parseInt(e.target.value))}
               disabled={loading}
             />
           </div>
@@ -122,17 +112,17 @@ export default function AdminPage() {
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <div style={{ padding: '0.5rem', background: 'white', borderRadius: '0.5rem', display: 'flex' }}>
-                  <QRCodeSVG 
+                  <QRCodeSVG
                     id={`qr-${t.uuid}`}
-                    value={t.uuid} 
-                    size={64} 
+                    value={t.uuid}
+                    size={64}
                     level="H"
                     includeMargin={false}
                   />
                 </div>
-                <button 
+                <button
                   onClick={() => downloadQR(t.uuid, t.name)}
-                  className="flex-center" 
+                  className="flex-center"
                   style={{ background: 'var(--glass)', color: 'white', padding: '0.5rem', borderRadius: '0.5rem' }}
                   title="Download QR"
                 >

@@ -99,23 +99,30 @@ export default function ScanPage() {
     setStatus('processing');
 
     // Parse QR Content (JSON vs String)
-    let uuid = scannedText;
+    let treasureInput: any = scannedText; // string or object
     let desc = '';
 
     try {
       const data = JSON.parse(scannedText);
       if (data.id) {
-        uuid = data.id;
+        // Stateless QR Object
+        treasureInput = {
+          uuid: data.id,
+          name: data.name,
+          points: data.points,
+          description: data.desc
+        };
         desc = data.desc || '';
       }
     } catch (e) {
-      // Not JSON, treat as raw UUID string
+      // Not JSON, treat as raw UUID string (Legacy)
+      treasureInput = scannedText;
     }
 
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    const result = collectTreasureLocal(userId, uuid);
+    const result = collectTreasureLocal(userId, treasureInput);
 
     if (result.success) {
       setStatus('success');

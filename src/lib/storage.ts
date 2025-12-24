@@ -91,17 +91,46 @@ export const getUserData = (userId: string): UserData => {
     return user;
 };
 
-export const collectTreasureLocal = (userId: string, treasureUuid: string): { success: boolean; message: string; points?: number } => {
-    const treasure = getTreasureByUuid(treasureUuid);
+export const collectTreasureLocal = (userId: string, treasureInput: string | Partial<Treasure>): { success: boolean; message: string; points?: number } => {
+    let treasure: Treasure | undefined;
+
+    // 1. Resolve Treasure
+    if (typeof treasureInput === 'string') {
+        // Legacy: UUID only look up
+        treasure = getTreasureByUuid(treasureInput);
+    } else {
+        // Stateless: Object provided
+        if (!treasureInput.uuid || !treasureInput.name || !treasureInput.points) {
+            return { success: false, message: "Invalid QR Data" };
+        }
+
+        // Check if we already know this treasure, if not, save it!
+        const existing = getTreasureByUuid(treasureInput.uuid);
+        if (existing) {
+            treasure = existing;
+        } else {
+            // Register new treasure from QR data
+            treasure = {
+                id: uuidv4(), // Local ID (internal)
+                uuid: treasureInput.uuid,
+                name: treasureInput.name,
+                points: treasureInput.points,
+                description: treasureInput.description,
+                createdAt: new Date().toISOString()
+            };
+            const allTreasures = getTreasures();
+            allTreasures.push(treasure);
+            setItems(KEYS.TREASURES, allTreasures);
+        }
+    }
 
     if (!treasure) {
-        return { success: false, message: "Invalid Treasure Code" };
+        return { success: false, message: "Unknown Treasure (Sync Required)" };
     }
 
     const users = getItems<UserData>(KEYS.USERS);
     const userIndex = users.findIndex((u) => u.uid === userId);
 
-    // Should ideally be created by getUserData call before this, but handle safety
     let user = userIndex >= 0 ? users[userIndex] : {
         uid: userId,
         collectedTreasures: [],
@@ -109,12 +138,12 @@ export const collectTreasureLocal = (userId: string, treasureUuid: string): { su
         lastUpdated: new Date().toISOString(),
     };
 
-    if (user.collectedTreasures.includes(treasureUuid)) {
+    if (user.collectedTreasures.includes(treasure.uuid)) {
         return { success: false, message: "Already collected this treasure!" };
     }
 
     // Update User
-    user.collectedTreasures.push(treasureUuid);
+    user.collectedTreasures.push(treasure.uuid);
     user.totalPoints += treasure.points;
     user.lastUpdated = new Date().toISOString();
 

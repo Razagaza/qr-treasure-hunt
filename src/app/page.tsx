@@ -27,11 +27,7 @@ export default function Home() {
         </Link>
       </div>
 
-      <footer style={{ marginTop: '4rem', textAlign: 'center' }}>
-        <Link href="/admin" style={{ color: 'var(--primary)', opacity: 0.5, fontSize: '0.875rem' }}>
-          Admin Portal
-        </Link>
-      </footer>
+
     </div>
   );
 }

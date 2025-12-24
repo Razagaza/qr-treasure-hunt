@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { collectTreasureLocal, getCurrentUserId } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -10,6 +11,7 @@ export default function ScanPage() {
   const [userId, setUserId] = useState<string>('');
   const [status, setStatus] = useState<'idle' | 'scanning' | 'processing' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
+  const [description, setDescription] = useState('');
   const [points, setPoints] = useState(0);
   const scannerRef = useRef<any>(null);
   const router = useRouter();
@@ -52,7 +54,11 @@ export default function ScanPage() {
 
         scanner = new Html5QrcodeScanner(
           "reader",
-          { fps: 10, qrbox: { width: 250, height: 250 } },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            videoConstraints: { facingMode: "environment" }
+          },
           /* verbose= */ false
         );
 
@@ -84,13 +90,27 @@ export default function ScanPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
-  const handleScan = async (uuid: string) => {
+  const handleScan = async (scannedText: string) => {
     if (scannerRef.current) {
       scannerRef.current.clear().catch(console.error);
       scannerRef.current = null;
     }
 
     setStatus('processing');
+
+    // Parse QR Content (JSON vs String)
+    let uuid = scannedText;
+    let desc = '';
+
+    try {
+      const data = JSON.parse(scannedText);
+      if (data.id) {
+        uuid = data.id;
+        desc = data.desc || '';
+      }
+    } catch (e) {
+      // Not JSON, treat as raw UUID string
+    }
 
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -100,6 +120,7 @@ export default function ScanPage() {
     if (result.success) {
       setStatus('success');
       setMessage(result.message);
+      setDescription(desc);
       setPoints(result.points || 0);
     } else {
       setStatus('error');
@@ -110,6 +131,7 @@ export default function ScanPage() {
   const resetScanner = () => {
     setStatus('idle');
     setMessage('');
+    setDescription('');
   };
 
   return (
@@ -136,6 +158,11 @@ export default function ScanPage() {
             <div>
               <h2 style={{ marginBottom: '0.5rem', WebkitTextFillColor: '#10b981' }}>Treasure Found!</h2>
               <p style={{ opacity: 0.8 }}>{message}</p>
+              {description && (
+                <p style={{ marginTop: '0.5rem', fontStyle: 'italic', color: 'var(--secondary)' }}>
+                  "{description}"
+                </p>
+              )}
               <div className="points-badge">+{points} Points</div>
             </div>
             <button className="btn-primary" onClick={resetScanner} style={{ width: '100%' }}>

@@ -4,6 +4,7 @@ export interface Treasure {
     id: string;
     uuid: string;
     name: string;
+    description?: string;
     points: number;
     createdAt: string;
 }
@@ -40,12 +41,13 @@ export const getTreasures = (): Treasure[] => {
     return getItems<Treasure>(KEYS.TREASURES);
 };
 
-export const addTreasure = (name: string, points: number): Treasure => {
+export const addTreasure = (name: string, points: number, description: string = ''): Treasure => {
     const treasures = getTreasures();
     const newTreasure: Treasure = {
         id: uuidv4(),
         uuid: uuidv4(),
         name,
+        description,
         points,
         createdAt: new Date().toISOString(),
     };

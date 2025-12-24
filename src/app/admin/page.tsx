@@ -8,6 +8,7 @@ import { Plus, Trash2, Download, QrCode as QrIcon } from 'lucide-react';
 export default function AdminPage() {
   const [treasures, setTreasures] = useState<Treasure[]>([]);
   const [newName, setNewName] = useState('');
+  const [newDesc, setNewDesc] = useState('');
   const [newPoints, setNewPoints] = useState(10);
   const [loading, setLoading] = useState(false);
 
@@ -31,9 +32,10 @@ export default function AdminPage() {
       // Simulate delay
       await new Promise(resolve => setTimeout(resolve, 500));
 
-      addTreasure(newName, newPoints);
+      addTreasure(newName, newPoints, newDesc);
 
       setNewName('');
+      setNewDesc('');
       setNewPoints(10);
       loadTreasures();
     } catch (error) {
@@ -75,12 +77,23 @@ export default function AdminPage() {
         <h2 style={{ fontSize: '1.25rem' }}>Create New Treasure</h2>
         <form onSubmit={handleAddTreasure}>
           <div className="input-group">
-            <label>Treasure Name (e.g., Sofa, Bookshelf)</label>
+            <label>Treasure Name</label>
             <input
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
-              placeholder="Enter location or name"
+              placeholder="e.g., Hidden Sofa"
+              disabled={loading}
+              required
+            />
+          </div>
+          <div className="input-group">
+            <label>Description (Embedded in QR)</label>
+            <input
+              type="text"
+              value={newDesc}
+              onChange={(e) => setNewDesc(e.target.value)}
+              placeholder="e.g., You found the secret sofa!"
               disabled={loading}
             />
           </div>
@@ -91,6 +104,7 @@ export default function AdminPage() {
               value={newPoints}
               onChange={(e) => setNewPoints(parseInt(e.target.value))}
               disabled={loading}
+              min="1"
             />
           </div>
           <button type="submit" className="btn-primary flex-center" style={{ width: '100%', gap: '0.5rem' }} disabled={loading}>
@@ -104,33 +118,42 @@ export default function AdminPage() {
         <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Existing Treasures</h2>
         <div style={{ display: 'grid', gap: '1rem' }}>
           {treasures.length === 0 && <p style={{ opacity: 0.5 }}>No treasures found.</p>}
-          {treasures.map((t) => (
-            <div key={t.id} className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem', background: 'none', WebkitTextFillColor: 'inherit' }}>{t.name}</h3>
-                <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.6 }}>{t.points} Points • {t.uuid.substring(0, 8)}...</p>
-              </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <div style={{ padding: '0.5rem', background: 'white', borderRadius: '0.5rem', display: 'flex' }}>
-                  <QRCodeSVG
-                    id={`qr-${t.uuid}`}
-                    value={t.uuid}
-                    size={64}
-                    level="H"
-                    includeMargin={false}
-                  />
+          {treasures.map((t) => {
+            // Generate QR Content: JSON string with id and description
+            const qrValue = JSON.stringify({
+              id: t.uuid,
+              desc: t.description || ''
+            });
+
+            return (
+              <div key={t.id} className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', background: 'none', WebkitTextFillColor: 'inherit' }}>{t.name}</h3>
+                  <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.6 }}>{t.points} Points</p>
+                  {t.description && <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.5, fontStyle: 'italic' }}>"{t.description}"</p>}
                 </div>
-                <button
-                  onClick={() => downloadQR(t.uuid, t.name)}
-                  className="flex-center"
-                  style={{ background: 'var(--glass)', color: 'white', padding: '0.5rem', borderRadius: '0.5rem' }}
-                  title="Download QR"
-                >
-                  <Download size={18} />
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ padding: '0.5rem', background: 'white', borderRadius: '0.5rem', display: 'flex' }}>
+                    <QRCodeSVG
+                      id={`qr-${t.uuid}`}
+                      value={qrValue}
+                      size={64}
+                      level="M"
+                      includeMargin={false}
+                    />
+                  </div>
+                  <button
+                    onClick={() => downloadQR(t.uuid, t.name)}
+                    className="flex-center"
+                    style={{ background: 'var(--glass)', color: 'white', padding: '0.5rem', borderRadius: '0.5rem' }}
+                    title="Download QR"
+                  >
+                    <Download size={18} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 

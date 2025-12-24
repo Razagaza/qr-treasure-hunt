@@ -160,8 +160,8 @@ export default function ScanPage() {
       </header>
 
       <div className="scanner-wrapper card">
-        {/* Only render this specific div when scanning */}
-        {status === 'scanning' && <div id="reader" style={{ width: '100%', minHeight: '300px' }}></div>}
+        {/* Always keep the reader div in the DOM to prevent library crashes during unmount/cleanup */}
+        <div id="reader" style={{ width: '100%', minHeight: '300px', display: status === 'scanning' ? 'block' : 'none' }}></div>
 
         {status === 'processing' && (
           <div className="flex-center" style={{ flexDirection: 'column', padding: '3rem', gap: '1rem' }}>

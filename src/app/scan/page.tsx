@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
 import { collectTreasureLocal, getCurrentUserId } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -12,54 +11,88 @@ export default function ScanPage() {
   const [status, setStatus] = useState<'idle' | 'scanning' | 'processing' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
   const [points, setPoints] = useState(0);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const scannerRef = useRef<any>(null);
   const router = useRouter();
 
+  // 1. Initialize User
   useEffect(() => {
-    // 1. Get local user ID
     const uid = getCurrentUserId();
     setUserId(uid);
   }, []);
 
+  // 2. Start Scanning when User is ready
   useEffect(() => {
-    if (!userId || status !== 'idle') return;
+    if (userId && status === 'idle') {
+      setStatus('scanning');
+    }
+  }, [userId, status]);
 
-    // 2. Initialize Scanner
-    const scanner = new Html5QrcodeScanner(
-      "reader",
-      { fps: 10, qrbox: { width: 250, height: 250 } },
-      /* verbose= */ false
-    );
+  // 3. Initialize Scanner when status is 'scanning' (DOM element exists)
+  useEffect(() => {
+    if (status !== 'scanning') return;
 
-    scanner.render(onScanSuccess, onScanFailure);
-    scannerRef.current = scanner;
-    setStatus('scanning');
+    let scanner: any = null;
+    let mounted = true;
+
+    const initScanner = async () => {
+      try {
+        const { Html5QrcodeScanner } = await import('html5-qrcode');
+
+        if (!mounted) return;
+
+        // Ensure element exists before initializing
+        // Add a small delay to ensure DOM render
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        const element = document.getElementById('reader');
+        if (!element) {
+          console.error("Reader element not found");
+          return;
+        }
+
+        scanner = new Html5QrcodeScanner(
+          "reader",
+          { fps: 10, qrbox: { width: 250, height: 250 } },
+          /* verbose= */ false
+        );
+
+        scanner.render(onScanSuccess, onScanFailure);
+        scannerRef.current = scanner;
+
+      } catch (err) {
+        console.error("Failed to load scanner", err);
+      }
+    };
+
+    initScanner();
 
     function onScanSuccess(decodedText: string) {
       if (status === 'processing') return;
-
       handleScan(decodedText);
-      // Clean up scanner after successful scan to prevent multiple triggers
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
-      }
     }
 
     function onScanFailure(error: any) {
-      // Ignore scan failures (usually means no QR in frame)
+      // Ignore
     }
 
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current.clear().catch(console.error);
+      mounted = false;
+      if (scanner) {
+        scanner.clear().catch(console.error);
       }
     };
-  }, [userId, status]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   const handleScan = async (uuid: string) => {
+    if (scannerRef.current) {
+      scannerRef.current.clear().catch(console.error);
+      scannerRef.current = null;
+    }
+
     setStatus('processing');
 
-    // Simulate network delay for better UX
+    // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
     const result = collectTreasureLocal(userId, uuid);
@@ -87,6 +120,7 @@ export default function ScanPage() {
       </header>
 
       <div className="scanner-wrapper card">
+        {/* Only render this specific div when scanning to ensure clean mounting/unmounting */}
         {status === 'scanning' && <div id="reader"></div>}
 
         {status === 'processing' && (

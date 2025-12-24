@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 import { collectTreasureLocal, getCurrentUserId } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -32,12 +33,12 @@ export default function ScanPage() {
   useEffect(() => {
     if (status !== 'scanning') return;
 
-    let html5QrCode: any = null;
+    let scanner: any = null;
     let mounted = true;
 
     const initScanner = async () => {
       try {
-        const { Html5Qrcode } = await import('html5-qrcode');
+        const { Html5QrcodeScanner } = await import('html5-qrcode');
 
         if (!mounted) return;
 
@@ -50,18 +51,20 @@ export default function ScanPage() {
           return;
         }
 
-        html5QrCode = new Html5Qrcode("reader");
-        scannerRef.current = html5QrCode;
-
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-        // Use environment (back) camera
-        await html5QrCode.start(
-          { facingMode: "environment" },
-          config,
-          onScanSuccess,
-          onScanFailure
+        // Use the stable Widget version (Html5QrcodeScanner)
+        scanner = new Html5QrcodeScanner(
+          "reader",
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            videoConstraints: { facingMode: "environment" },
+            rememberLastUsedCamera: true
+          },
+          /* verbose= */ false
         );
+
+        scanner.render(onScanSuccess, onScanFailure);
+        scannerRef.current = scanner;
 
       } catch (err) {
         console.error("Failed to load scanner", err);
@@ -72,31 +75,28 @@ export default function ScanPage() {
 
     function onScanSuccess(decodedText: string) {
       if (status === 'processing') return;
-
-      // Pause scanner to improve UX
-      if (html5QrCode) {
-        html5QrCode.pause();
-      }
-
       handleScan(decodedText);
     }
 
     function onScanFailure(error: any) {
-      // Ignore frame read errors
+      // Ignore
     }
 
     return () => {
       mounted = false;
-      if (scannerRef.current) {
-        // We use catch here to prevent unhandled promise rejections during unmount
-        scannerRef.current.stop().catch((err: any) => console.warn("Scanner Cleanup Error", err));
-        scannerRef.current.clear().catch((err: any) => console.warn("Scanner Clear Error", err));
+      if (scanner) {
+        scanner.clear().catch(console.error);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   const handleScan = async (scannedText: string) => {
+    if (scannerRef.current) {
+      scannerRef.current.clear().catch(console.error);
+      scannerRef.current = null;
+    }
+
     setStatus('processing');
 
     // Parse QR Content (JSON vs String)
@@ -115,23 +115,12 @@ export default function ScanPage() {
         desc = data.desc || '';
       }
     } catch (e) {
+      // Not JSON, treat as raw UUID string
       treasureInput = scannedText;
     }
 
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
-
-    // Fully stop scanner BEFORE updating state to success/error
-    // This prevents the "Client-side exception" where the DOM element is removed while camera is still active
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
-      } catch (err) {
-        console.warn("Failed to stop scanner cleanly", err);
-      }
-      scannerRef.current = null;
-    }
 
     const result = collectTreasureLocal(userId, treasureInput);
 
@@ -160,8 +149,8 @@ export default function ScanPage() {
       </header>
 
       <div className="scanner-wrapper card">
-        {/* Always keep the reader div in the DOM to prevent library crashes during unmount/cleanup */}
-        <div id="reader" style={{ width: '100%', minHeight: '300px', display: status === 'scanning' ? 'block' : 'none' }}></div>
+        {/* Only render this specific div when scanning */}
+        {status === 'scanning' && <div id="reader"></div>}
 
         {status === 'processing' && (
           <div className="flex-center" style={{ flexDirection: 'column', padding: '3rem', gap: '1rem' }}>
@@ -211,15 +200,20 @@ export default function ScanPage() {
         .scanner-wrapper {
           overflow: hidden;
           padding: 0;
-          background: #000;
-          min-height: 300px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
         }
         #reader {
           width: 100%;
           border: none !important;
+        }
+        :global(#reader__dashboard) {
+          padding: 1rem !important;
+        }
+        :global(#reader__dashboard_section_csr button) {
+           display: none !important; 
+           /* Hide Camera Selection/Permission buttons if they appear redundantly */
+        }
+        :global(#reader__status_span) {
+           display: none;
         }
         .animate-spin {
           animation: spin 1s linear infinite;

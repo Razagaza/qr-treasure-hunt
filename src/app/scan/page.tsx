@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
 import { collectTreasureLocal, getCurrentUserId } from '@/lib/storage';
 import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
@@ -33,17 +32,16 @@ export default function ScanPage() {
   useEffect(() => {
     if (status !== 'scanning') return;
 
-    let scanner: any = null;
+    let html5QrCode: any = null;
     let mounted = true;
 
     const initScanner = async () => {
       try {
-        const { Html5QrcodeScanner } = await import('html5-qrcode');
+        const { Html5Qrcode } = await import('html5-qrcode');
 
         if (!mounted) return;
 
         // Ensure element exists before initializing
-        // Add a small delay to ensure DOM render
         await new Promise(resolve => setTimeout(resolve, 100));
 
         const element = document.getElementById('reader');
@@ -52,18 +50,18 @@ export default function ScanPage() {
           return;
         }
 
-        scanner = new Html5QrcodeScanner(
-          "reader",
-          {
-            fps: 10,
-            qrbox: { width: 250, height: 250 },
-            videoConstraints: { facingMode: "environment" }
-          },
-          /* verbose= */ false
-        );
+        html5QrCode = new Html5Qrcode("reader");
+        scannerRef.current = html5QrCode;
 
-        scanner.render(onScanSuccess, onScanFailure);
-        scannerRef.current = scanner;
+        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        // Use environment (back) camera
+        await html5QrCode.start(
+          { facingMode: "environment" },
+          config,
+          onScanSuccess,
+          onScanFailure
+        );
 
       } catch (err) {
         console.error("Failed to load scanner", err);
@@ -74,38 +72,39 @@ export default function ScanPage() {
 
     function onScanSuccess(decodedText: string) {
       if (status === 'processing') return;
+
+      // Pause scanner to improve UX
+      if (html5QrCode) {
+        html5QrCode.pause();
+      }
+
       handleScan(decodedText);
     }
 
     function onScanFailure(error: any) {
-      // Ignore
+      // Ignore frame read errors
     }
 
     return () => {
       mounted = false;
-      if (scanner) {
-        scanner.clear().catch(console.error);
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch((err: any) => console.warn("Scanner Cleanup Error", err));
+        scannerRef.current.clear().catch((err: any) => console.warn("Scanner Clear Error", err));
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   const handleScan = async (scannedText: string) => {
-    if (scannerRef.current) {
-      scannerRef.current.clear().catch(console.error);
-      scannerRef.current = null;
-    }
-
     setStatus('processing');
 
     // Parse QR Content (JSON vs String)
-    let treasureInput: any = scannedText; // string or object
+    let treasureInput: any = scannedText;
     let desc = '';
 
     try {
       const data = JSON.parse(scannedText);
       if (data.id) {
-        // Stateless QR Object
         treasureInput = {
           uuid: data.id,
           name: data.name,
@@ -115,7 +114,6 @@ export default function ScanPage() {
         desc = data.desc || '';
       }
     } catch (e) {
-      // Not JSON, treat as raw UUID string (Legacy)
       treasureInput = scannedText;
     }
 
@@ -123,6 +121,13 @@ export default function ScanPage() {
     await new Promise(resolve => setTimeout(resolve, 800));
 
     const result = collectTreasureLocal(userId, treasureInput);
+
+    // Fully stop scanner after processing
+    if (scannerRef.current) {
+      scannerRef.current.stop().catch(console.error);
+      scannerRef.current.clear().catch(console.error);
+      scannerRef.current = null;
+    }
 
     if (result.success) {
       setStatus('success');
@@ -149,7 +154,7 @@ export default function ScanPage() {
       </header>
 
       <div className="scanner-wrapper card">
-        {/* Only render this specific div when scanning to ensure clean mounting/unmounting */}
+        {/* Only render this specific div when scanning */}
         {status === 'scanning' && <div id="reader"></div>}
 
         {status === 'processing' && (
@@ -200,16 +205,15 @@ export default function ScanPage() {
         .scanner-wrapper {
           overflow: hidden;
           padding: 0;
+          background: #000;
+          min-height: 300px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
         #reader {
           width: 100%;
           border: none !important;
-        }
-        :global(#reader__dashboard) {
-          padding: 1rem !important;
-        }
-        :global(#reader__status_span) {
-           display: none;
         }
         .animate-spin {
           animation: spin 1s linear infinite;

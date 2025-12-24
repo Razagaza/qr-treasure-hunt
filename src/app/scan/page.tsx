@@ -208,10 +208,6 @@ export default function ScanPage() {
         :global(#reader__dashboard) {
           padding: 1rem !important;
         }
-        :global(#reader__dashboard_section_csr button) {
-           display: none !important; 
-           /* Hide Camera Selection/Permission buttons if they appear redundantly */
-        }
         :global(#reader__status_span) {
            display: none;
         }

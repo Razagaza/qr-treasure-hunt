@@ -6,6 +6,7 @@ export interface IDatabase {
     // Groups
     getGroup(id: string): Promise<GroupData | null>;
     saveGroup(id: string, data: GroupData): Promise<void>;
+    updateGroup(id: string, updateFn: (data: GroupData) => GroupData): Promise<GroupData | null>;
 
     // Treasures
     getTreasure(id: number): Promise<TreasureData | null>;
@@ -51,6 +52,15 @@ export const SupabaseAdapter: IDatabase = {
             });
 
         if (error) console.error('Supabase SaveGroup Error:', error);
+    },
+
+    async updateGroup(id: string, updateFn: (data: GroupData) => GroupData) {
+        // Simple Read-Modify-Write for Supabase (Not atomic, but satisfies interface)
+        const group = await this.getGroup(id);
+        if (!group) return null;
+        const newData = updateFn(group);
+        await this.saveGroup(id, newData);
+        return newData;
     },
 
     async getTreasure(id: number) {
@@ -154,6 +164,7 @@ export const SupabaseAdapter: IDatabase = {
 export const FileAdapter: IDatabase = {
     getGroup: fileDb.getGroupData,
     saveGroup: fileDb.saveGroupData,
+    updateGroup: fileDb.updateGroupData,
     getTreasure: fileDb.getTreasureData,
     getAllTreasures: fileDb.getAllTreasures,
     saveTreasure: fileDb.saveTreasureData,

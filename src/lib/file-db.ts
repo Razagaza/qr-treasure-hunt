@@ -42,23 +42,60 @@ export async function initDataDirs() {
     }
 }
 
+// --- Concurrency Control ---
+class Mutex {
+    private mutex = Promise.resolve();
+
+    lock(): Promise<() => void> {
+        let begin: (unlock: () => void) => void = () => { };
+
+        this.mutex = this.mutex.then(() => {
+            return new Promise<void>(resolve => {
+                begin = resolve;
+            });
+        });
+
+        return new Promise<() => void>(resolve => {
+            resolve(begin);
+        });
+    }
+
+    async dispatch<T>(fn: (() => T) | (() => PromiseLike<T>)): Promise<T> {
+        const unlock = await this.lock();
+        try {
+            return await Promise.resolve(fn());
+        } finally {
+            unlock();
+        }
+    }
+}
+
+const groupLocks: Record<string, Mutex> = {};
+
+function getGroupLock(groupId: string) {
+    if (!groupLocks[groupId]) {
+        groupLocks[groupId] = new Mutex();
+    }
+    return groupLocks[groupId];
+}
+
 // --- Group Operations ---
 
-export async function getGroupData(groupId: string): Promise<GroupData | null> {
-    // 1. Try Memory first (fastest & handles serverless warm instances)
+// Internal helper to read without locking (caller must handle lock if needed)
+async function _getGroupDataInternal(groupId: string): Promise<GroupData | null> {
+    // 1. Try Memory
     if (globalStore.groups[groupId]) {
         return globalStore.groups[groupId];
     }
-
     // 2. Try File
     try {
         const filePath = path.join(GROUPS_DIR, `${groupId}.json`);
         const data = await fs.readFile(filePath, 'utf-8');
         const parsed = JSON.parse(data);
-        globalStore.groups[groupId] = parsed; // Cache it
+        globalStore.groups[groupId] = parsed;
         return parsed;
     } catch (error: any) {
-        // 3. Fallback: If missing, return Initial Data (don't save to file yet if FS is broken)
+        // Fallback
         if (['A', 'B', 'C', 'D'].includes(groupId)) {
             const initialData: GroupData = {
                 id: groupId,
@@ -72,18 +109,37 @@ export async function getGroupData(groupId: string): Promise<GroupData | null> {
     }
 }
 
-export async function saveGroupData(groupId: string, data: GroupData): Promise<void> {
-    // 1. Update Memory
+// Internal helper to save without locking
+async function _saveGroupDataInternal(groupId: string, data: GroupData): Promise<void> {
     globalStore.groups[groupId] = data;
-
-    // 2. Try Persist to File
     try {
-        await initDataDirs(); // Try to ensure dir exists
+        await initDataDirs();
         const filePath = path.join(GROUPS_DIR, `${groupId}.json`);
         await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-    } catch (error) {
-        // console.log(`[FileDB] Memory-only mode for group ${groupId}`);
-    }
+    } catch (error) { /* memory only */ }
+}
+
+export async function getGroupData(groupId: string): Promise<GroupData | null> {
+    // Read does not need strict locking for this app, but if we wanted strong consistency we could lock.
+    // For performance, we'll just read.
+    return _getGroupDataInternal(groupId);
+}
+
+export async function saveGroupData(groupId: string, data: GroupData): Promise<void> {
+    await getGroupLock(groupId).dispatch(async () => {
+        await _saveGroupDataInternal(groupId, data);
+    });
+}
+
+export async function updateGroupData(groupId: string, updateFn: (data: GroupData) => GroupData): Promise<GroupData | null> {
+    return await getGroupLock(groupId).dispatch(async () => {
+        const currentData = await _getGroupDataInternal(groupId);
+        if (!currentData) return null;
+
+        const newData = updateFn(currentData);
+        await _saveGroupDataInternal(groupId, newData);
+        return newData;
+    });
 }
 
 // --- Treasure Operations ---

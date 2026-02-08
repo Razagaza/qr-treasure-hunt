@@ -69,22 +69,20 @@ export async function POST(request: Request) {
             return response;
         }
 
-        // 1. Get Group Data (DB)
-        const groupData = await db.getGroup(group);
-        if (groupData) {
+        // 1. Update Group Data Atomically (Mutex Protected)
+        await db.updateGroup(group, (groupData) => {
             // Check if already found to prevent double counting
-            if (!groupData.foundTreasures.some(t => t.treasureId === treasureId)) {
+            if (!groupData.foundTreasures.some((t: any) => t.treasureId === treasureId)) {
                 const pointsAwarded = treasure.points;
-                // 4. Update Group Data (DB)
                 groupData.score += pointsAwarded;
                 groupData.foundTreasures.push({
                     treasureId,
                     score: pointsAwarded,
                     foundAt: new Date().toISOString()
                 });
-                await db.saveGroup(group, groupData);
             }
-        }
+            return groupData;
+        });
 
         // --- Cookie Persistence (for Read-Only FS) ---
         const foundCookie = cookieStore.get('treasure-found');

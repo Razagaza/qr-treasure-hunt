@@ -89,7 +89,7 @@ export default function ClientHome() {
                                     <UserCircle size={20} color="#d8b4fe" />
                                     Enter Your Name
                                 </h2>
-                                <p className="step-description">Team {selectedGroup}</p>
+                                <p className="step-description">Team {group}</p>
                             </div>
 
                             <div className="input-section">

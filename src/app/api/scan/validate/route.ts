@@ -29,13 +29,23 @@ export async function POST(request: Request) {
         let baseId: number | null = null;
 
         // 1. Resolve QR to Treasure ID (DB)
-        console.log(`[Validate] Lookup QR: ${qrData}`);
-        baseId = await db.getTreasureIdByQr(qrData);
+        let code = qrData;
+        try {
+            // Attempt to parse if it's a JSON string
+            if (qrData.startsWith('{')) {
+                const parsed = JSON.parse(qrData);
+                if (parsed.id) code = parsed.id;
+            }
+        } catch (e) {
+            console.log('[Validate] QR Parse Warning: Not a valid JSON, using raw string.');
+        }
+
+        console.log(`[Validate] Lookup QR: ${code}`);
+        baseId = await db.getTreasureIdByQr(code);
         console.log(`[Validate] Mapped ID: ${baseId}`);
 
         if (baseId === null) {
-            console.error(`[Validate] Error: QR Mapping Failed for code '${qrData}'`);
-            // Check if DB is even connected or has data
+            console.error(`[Validate] Error: QR Mapping Failed for code '${code}'`);
             if (process.env.NODE_ENV === 'development') {
                 console.log('[Validate] Debug info: Ensure qr_codes table has data and code matches exactly.');
             }
@@ -56,8 +66,9 @@ export async function POST(request: Request) {
         if (treasure.active === false) {
             return NextResponse.json({
                 success: false,
-                message: 'This QR code is currently disabled.'
-            }, { status: 403 });
+                message: '꽝! 아쉽지만 다음 기회에...',
+                inactive: true
+            }, { status: 200 }); // Return 200 to handle gracefully in frontend
         }
 
         // 3. Check if already found (File/Memory + Cookie)

@@ -100,19 +100,29 @@ export default function ScanPage() {
 
       if (data.success) {
         setTreasure(data.treasure);
-        setStatus('solving');
         setAnswer('');
 
-        // Start Timer if needed
-        if (data.treasure.timeLimit) {
+        // Handle Timer Interaction
+        if (data.treasure.timeLimit > 0) {
           setTimeLeft(data.treasure.timeLimit);
         } else {
-          setTimeLeft(null);
+          setTimeLeft(0);
         }
 
+        setStatus('solving');
+
       } else {
-        setStatus('error');
-        setMessage(data.message || 'Validation failed');
+        // Special Handling for "Bang" (Inactive)
+        if (data.inactive) {
+          setStatus('error'); // Changed to error to display message
+          setMessage(data.message);
+        } else if (data.alreadyFound) {
+          setStatus('error');
+          setMessage('Already found!');
+        } else {
+          setStatus('error');
+          setMessage(data.message || 'Invalid QR Code');
+        }
       }
     } catch (err) {
       setStatus('error');
@@ -210,6 +220,16 @@ export default function ScanPage() {
           <h2 className="title text-red">Oops!</h2>
           <p className="message">{message}</p>
           <button className="btn-primary" onClick={handleClose}>Close</button>
+        </div>
+      )}
+
+      {/* Inactive "Bang" State */}
+      {status === 'inactive' && (
+        <div className="card flex-center flex-col p-8 gap-4 text-center">
+          <div className="bang-icon">💥</div>
+          <h2 className="title text-red">꽝!</h2>
+          <p className="message">{message}</p>
+          <button className="btn-primary" onClick={handleClose}>닫기</button>
         </div>
       )}
 
@@ -443,7 +463,15 @@ export default function ScanPage() {
 
          .animate-spin { animation: spin 1s linear infinite; }
          @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-       `}</style>
+         .bang-icon {
+            font-size: 4rem;
+            animation: bounce 0.5s infinite alternate;
+        }
+        @keyframes bounce {
+            from { transform: scale(1); }
+            to { transform: scale(1.2); }
+        }
+      `}</style>
     </div>
   );
 }

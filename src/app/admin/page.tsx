@@ -147,6 +147,17 @@ export default function AdminPage() {
         .animate-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
+      <section style={{ marginTop: '3rem', padding: '1.5rem', background: '#222', borderRadius: '12px' }}>
+        <h2>🛠 Test Zone</h2>
+        <p style={{ opacity: 0.7, marginBottom: '1rem' }}>Scan this QR code to test the game flow (Treasure ID: 0)</p>
+
+        <div style={{ background: 'white', padding: '1rem', display: 'inline-block', borderRadius: '8px' }}>
+          <QRCodeSVG value={JSON.stringify({ id: encrypt('0'), type: 'treasure' })} size={200} />
+        </div>
+        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', fontFamily: 'monospace', color: '#888' }}>
+          Raw: {JSON.stringify({ id: encrypt('0').substring(0, 10) + '...', type: 'treasure' })}
+        </p>
+      </section>
     </div>
   );
 }

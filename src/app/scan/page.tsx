@@ -195,6 +195,32 @@ export default function ScanPage() {
 
   return (
     <div className="scan-container">
+      {/* Header with Back Button */}
+      <div style={{
+        position: 'absolute',
+        top: '1rem',
+        left: '1rem',
+        zIndex: 20
+      }}>
+        <button
+          onClick={() => router.push('/dashboard')}
+          style={{
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            cursor: 'pointer'
+          }}
+        >
+          <ArrowLeft size={20} />
+        </button>
+      </div>
       <div id="reader" style={{ display: status === 'scanning' ? 'block' : 'none' }}></div>
 
       {/* Loading / Validating */}
@@ -251,8 +277,8 @@ export default function ScanPage() {
                 <button
                   key={choice}
                   className={`p-3 rounded border text-left transition-colors ${answer === choice
-                      ? 'bg-primary border-primary text-black'
-                      : 'bg-transparent border-slate-700 hover:bg-slate-800'
+                    ? 'bg-primary border-primary text-black'
+                    : 'bg-transparent border-slate-700 hover:bg-slate-800'
                     }`}
                   onClick={() => setAnswer(choice)}
                 >

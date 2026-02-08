@@ -131,21 +131,30 @@ export default function Dashboard() {
       )}
 
       {/* Footer Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-slate-950/80 backdrop-blur border-t border-slate-800 p-4 flex justify-around">
-        <Link href="/dashboard" className="flex flex-col items-center gap-1 text-primary">
-          <Trophy size={20} />
-          <span className="text-[10px]">Dashboard</span>
-        </Link>
-        <Link href="/scan" className="flex flex-col items-center gap-1 opacity-50 hover:opacity-100">
-          <div className="bg-primary text-black p-3 rounded-full -mt-8 border-4 border-slate-950">
-            <Search size={24} />
-          </div>
-        </Link>
-        <Link href="/" className="flex flex-col items-center gap-1 opacity-50 hover:opacity-100">
-          <Home size={20} />
-          <span className="text-[10px]">Home</span>
-        </Link>
-      </nav>
+      <div style={{ marginTop: '2rem' }}>
+        <button
+          onClick={() => router.push('/scan')}
+          style={{
+            width: '100%',
+            padding: '1.5rem',
+            borderRadius: '16px',
+            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+            color: 'white',
+            border: 'none',
+            fontSize: '1.25rem',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.75rem',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(37, 99, 235, 0.3)'
+          }}
+        >
+          <ScanLine size={28} />
+          Scan Treasure
+        </button>
+      </div>
 
       <style jsx>{`
         .dashboard-container {

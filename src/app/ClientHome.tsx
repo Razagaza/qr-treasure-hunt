@@ -7,13 +7,20 @@ import { Users, User, ArrowRight, Sparkles, UserCircle } from 'lucide-react';
 export default function ClientHome() {
     const router = useRouter();
     const [step, setStep] = useState<'group' | 'name'>('group');
-    const [selectedGroup, setSelectedGroup] = useState<string>('');
-    const [username, setUsername] = useState<string>('');
+    const [group, setGroup] = useState<string | null>(null);
+    const [username, setUsername] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const groups = ['A', 'B', 'C', 'D'];
 
-    const handleGroupSelect = (group: string) => {
-        setSelectedGroup(group);
+    const handleReset = async () => {
+        if (!confirm('Are you sure you want to reset your local session?')) return;
+        await fetch('/api/auth/logout', { method: 'POST' });
+        window.location.href = '/'; // Hard reload to clear state
+    };
+
+    const handleGroupSelect = (selectedGroup: string) => {
+        setGroup(selectedGroup);
         setStep('name');
     };
 
@@ -45,7 +52,10 @@ export default function ClientHome() {
                         <Sparkles color="#fde047" size={32} />
                     </div>
                     <h1 className="title">Treasure Hunt</h1>
-                    <p className="subtitle">Join your team and find the hidden treasures!</p>
+                    <p className="subtitle">Select your team to begin the hunt!</p>
+                    <button onClick={handleReset} className="reset-link">
+                        Reset Session
+                    </button>
                 </div>
 
                 <div className="card form-card">

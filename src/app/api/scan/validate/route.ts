@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getTreasureData, getGroupData, getTreasureIdByQr } from '@/lib/file-db';
+import { db } from '@/lib/db-adapter';
 
 export async function POST(request: Request) {
     try {
@@ -9,6 +9,15 @@ export async function POST(request: Request) {
         console.log('Received qrData:', qrData);
 
         const cookieStore = await cookies();
+        // 0. Check Game Settings (Global Kill Switch)
+        const qrEnabled = await db.getGameSettings('qr_enabled');
+        if (qrEnabled === false) { // Explicit check for false, default true
+            return NextResponse.json({
+                success: false,
+                message: 'QR Scanning is currently disabled for this phase of the game.'
+            }, { status: 403 });
+        }
+
         const groupCookie = cookieStore.get('treasure-group');
 
         if (!groupCookie) {
@@ -19,22 +28,8 @@ export async function POST(request: Request) {
         const group = groupCookie.value;
         let baseId: number | null = null;
 
-        // 1. Extract Code and Lookup ID
-        // Support both raw string and JSON wrapper ({"id":"code","type":"treasure"})
-        let codeToLookup = qrData;
-
-        try {
-            const parsed = JSON.parse(qrData);
-            if (parsed.type === 'treasure' && parsed.id) {
-                codeToLookup = parsed.id;
-            }
-        } catch (e) {
-            // Not JSON, use raw
-        }
-
-        console.log('Code extracted for lookup:', codeToLookup);
-
-        baseId = await getTreasureIdByQr(codeToLookup);
+        // 1. Resolve QR to Treasure ID (DB)
+        baseId = await db.getTreasureIdByQr(qrData);
         console.log('Mapped Treasure ID:', baseId);
 
         if (baseId === null) {
@@ -49,9 +44,20 @@ export async function POST(request: Request) {
 
         console.log(`Group: ${group}, Offset: ${offset}, Target Treasure ID: ${targetId}`);
 
-        // 3. Check if already found
-        const groupData = await getGroupData(group);
-        const isAlreadyFound = groupData?.foundTreasures.some(t => t.treasureId === targetId);
+        // 3. Check if already found (File/Memory + Cookie)
+        const groupData = await db.getGroup(group);
+        let isAlreadyFound = groupData?.foundTreasures.some(t => t.treasureId === targetId);
+
+        if (!isAlreadyFound) {
+            // Check Cookie
+            const foundCookie = cookieStore.get('treasure-found');
+            if (foundCookie) {
+                try {
+                    const foundIds: number[] = JSON.parse(foundCookie.value);
+                    if (foundIds.includes(targetId)) isAlreadyFound = true;
+                } catch (e) { /* ignore */ }
+            }
+        }
 
         if (isAlreadyFound) {
             console.log('Status: Already found');
@@ -63,7 +69,7 @@ export async function POST(request: Request) {
         }
 
         // 4. Get Treasure Data
-        const treasure = await getTreasureData(targetId);
+        const treasure = await db.getTreasure(targetId);
         if (!treasure) {
             console.log('Error: Treasure data missing for ID', targetId);
             return NextResponse.json({ success: false, message: 'Treasure data not found. Contact Admin.' }, { status: 404 });

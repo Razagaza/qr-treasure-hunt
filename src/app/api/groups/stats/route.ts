@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getGroupData, getTreasureData, saveGroupData } from '@/lib/file-db';
+import { db } from '@/lib/db-adapter';
 
 export async function GET() {
     try {
@@ -16,8 +16,10 @@ export async function GET() {
         const username = userCookie ? decodeURIComponent(userCookie.value) : 'Guest';
 
         // Attempt to get data, auto-heal if missing is handled in file-db but we double check here
-        let groupData = await getGroupData(group);
+        let groupData = await db.getGroup(group);
 
+        // Save merged back to DB/File if needed
+        // await db.saveGroup(group, groupData);
         // Fallback for Read-Only FS or File Error
         if (!groupData) {
             console.warn(`[Stats] Group data missing for ${group}, using memory fallback.`);
@@ -26,22 +28,38 @@ export async function GET() {
                 score: 0,
                 foundTreasures: []
             };
-            // Try to save, but ignore error if it fails (e.g. read-only fs)
+        }
+
+        // --- Cookie Persistence Merge ---
+        const foundCookie = cookieStore.get('treasure-found');
+        if (foundCookie) {
             try {
-                await saveGroupData(group, groupData);
-            } catch (saveErr) {
-                console.warn('[Stats] Failed to persist auto-healed data:', saveErr);
-            }
+                const foundIds: number[] = JSON.parse(foundCookie.value);
+                // Merge into groupData if not already present
+                for (const id of foundIds) {
+                    if (!groupData.foundTreasures.some(ft => ft.treasureId === id)) {
+                        const t = await db.getTreasure(id);
+                        if (t) {
+                            groupData.foundTreasures.push({
+                                treasureId: id,
+                                foundAt: new Date().toISOString(), // Approximate
+                                score: t.points
+                            });
+                            groupData.score += t.points;
+                        }
+                    }
+                }
+            } catch (e) { console.warn('[Stats] Cookie parse failed', e); }
         }
 
         // Enrich found treasures with details
         const foundTreasures = await Promise.all(
             groupData.foundTreasures.map(async (ft) => {
-                const t = await getTreasureData(ft.treasureId);
+                const treasure = await db.getTreasure(ft.treasureId);
                 return {
                     ...ft,
-                    question: t?.question,
-                    hints: t?.hints
+                    question: treasure?.question,
+                    hints: treasure?.hints
                 };
             })
         );

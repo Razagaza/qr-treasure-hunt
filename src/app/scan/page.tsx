@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, ChangeEvent } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle2, AlertCircle, ArrowLeft, Timer } from 'lucide-react';
@@ -27,7 +27,7 @@ export default function ScanPage() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   const scannerRef = useRef<any>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // --- 1. Init Logic ---
   useEffect(() => {
@@ -220,7 +220,7 @@ export default function ScanPage() {
           <h2 className="title text-green">Correct!</h2>
           <div className="hints-box">
             <h3 className="hints-title">Unlocked Hints:</h3>
-            {hints.map((h, i) => (
+            {hints.map((h: string, i: number) => (
               <p key={i} className="hint-item">💡 {h}</p>
             ))}
           </div>
@@ -245,7 +245,7 @@ export default function ScanPage() {
 
           {treasure.type === 'choice' && treasure.choices ? (
             <div className="choices-list">
-              {treasure.choices.map((choice) => (
+              {treasure.choices.map((choice: string) => (
                 <button
                   key={choice}
                   className={`choice-btn ${answer === choice ? 'selected' : ''}`}
@@ -261,7 +261,12 @@ export default function ScanPage() {
               className="text-input"
               placeholder="Enter your answer..."
               value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
+            <input
+              type="text"
+              className="text-input"
+              placeholder="Enter your answer..."
+              value={answer}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setAnswer(e.target.value)}
             />
           )}
 

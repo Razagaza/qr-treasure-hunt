@@ -1,9 +1,9 @@
-import { getAllQrMappings } from '@/lib/file-db';
+import { db } from '@/lib/db-adapter';
 
 export const dynamic = 'force-dynamic';
 
 export default async function QrListPage() {
-    const mappings = await getAllQrMappings(); // { "code": id }
+    const mappings = await db.getAllQrMappings(); // { "code": id }
 
     // Convert to array and sort by ID
     const treasures = Object.entries(mappings)

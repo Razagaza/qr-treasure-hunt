@@ -1,4 +1,4 @@
-import { saveGroupData, saveTreasureData, initDataDirs, GroupData, TreasureData, saveQrCodeMapping } from '@/lib/file-db';
+import { saveGroupData, saveTreasureData, initDataDirs, GroupData, TreasureData, saveQrCodeMapping, getAllQrMappings } from '@/lib/file-db';
 import { encrypt } from '@/lib/crypto';
 
 export async function seed() {
@@ -16,7 +16,16 @@ export async function seed() {
         console.log(`Created Group ${group}`);
     }
 
-    console.log('Seeding treasures with Random Mapped Codes...');
+    console.log('Seeding treasures...');
+
+    // Load existing QRs to preserve them if needed
+    let existingQrMap: Record<number, string> = {};
+    try {
+        const mappings = await getAllQrMappings();
+        for (const [code, id] of Object.entries(mappings)) {
+            existingQrMap[id] = code;
+        }
+    } catch (e) { console.log('No existing QR mapping found.'); }
 
     // 30 Treasures Data
     const treasuresSource = [
@@ -93,10 +102,15 @@ export async function seed() {
         await saveTreasureData(i, treasure);
 
         // --- NEW QR LOGIC ---
-        const qrCode = generateRandomCode(); // Random 8 chars
-        await saveQrCodeMapping(qrCode, i);
-
-        console.log(`Treasure ID ${i} -> QR Code: ${qrCode}`);
+        // Only generate if not exists
+        let qrCode = existingQrMap[i];
+        if (!qrCode) {
+            qrCode = generateRandomCode(); // Random 8 chars
+            await saveQrCodeMapping(qrCode, i);
+            console.log(`[NEW] Treasure ID ${i} -> QR Code: ${qrCode}`);
+        } else {
+            console.log(`[EXISTING] Treasure ID ${i} -> QR Code: ${qrCode}`);
+        }
     }
 
     console.log('Seeding Complete');

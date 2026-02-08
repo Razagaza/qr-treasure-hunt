@@ -60,17 +60,23 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard-container">
-      <header className="header">
-        <div>
-          <p className="welcome-text">Hello, <span className="username">{data.username || 'Hunter'}</span></p>
-          <h1 className="group-title">Team {data.group}</h1>
-        </div>
-        <div className="score-box">
-          <div className="score-value">
-            <Trophy size={20} color="#facc15" />
-            <span>{data.score}</span>
+      <header className="dashboard-header">
+        <div className="header-content">
+          <h1 className="title">Team {data.group}</h1>
+          <div className="user-info">
+            {data.username && <span className="username">Agent {data.username}</span>}
+            <button onClick={() => {
+              if (confirm('Reset session?')) {
+                fetch('/api/auth/logout', { method: 'POST' }).then(() => window.location.href = '/');
+              }
+            }} className="reset-btn">
+              Reset
+            </button>
           </div>
-          <span className="score-label">Total Points</span>
+        </div>
+        <div className="score-card">
+          <Trophy color="#fde047" size={24} />
+          <span className="score">{data.score} pts</span>
         </div>
       </header>
 
@@ -266,6 +272,37 @@ export default function Dashboard() {
         @keyframes slideUp {
             from { transform: translateY(100%); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
+        }
+        .dashboard-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 2rem;
+          background: rgba(255, 255, 255, 0.1);
+          padding: 1rem;
+          border-radius: 12px;
+          backdrop-filter: blur(10px);
+        }
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .reset-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
         }
         .modal-header {
             display: flex;

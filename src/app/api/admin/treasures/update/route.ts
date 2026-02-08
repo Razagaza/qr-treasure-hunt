@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { saveTreasureData, getTreasureData } from '@/lib/file-db';
+import { db } from '@/lib/db-adapter';
 
 export async function POST(request: Request) {
     try {
@@ -10,7 +10,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, message: 'Invalid ID' }, { status: 400 });
         }
 
-        const existing = await getTreasureData(id);
+        const existing = await db.getTreasure(id);
         if (!existing) {
             return NextResponse.json({ success: false, message: 'Treasure not found' }, { status: 404 });
         }
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
             timeLimit: timeLimit ?? existing.timeLimit
         };
 
-        await saveTreasureData(id, updated);
+        await db.saveTreasure(id, body);
 
         return NextResponse.json({ success: true, message: 'Updated successfully', treasure: updated });
     } catch (error) {

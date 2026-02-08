@@ -21,9 +21,50 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [editingTreasure, setEditingTreasure] = useState<Treasure | null>(null);
 
+  // Game Settings State
+  const [qrEnabled, setQrEnabled] = useState(true);
+  const [loadingSettings, setLoadingSettings] = useState(true);
+
   useEffect(() => {
     fetchTreasures();
+    fetchSettings();
   }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('/api/admin/game-settings');
+      const data = await res.json();
+      if (data.success) {
+        setQrEnabled(data.qr_enabled);
+      }
+    } catch (e) {
+      console.error('Failed to load settings', e);
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  const toggleGameParams = async () => {
+    const newState = !qrEnabled;
+    setLoadingSettings(true);
+    try {
+      const res = await fetch('/api/admin/game-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ qr_enabled: newState })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setQrEnabled(data.qr_enabled);
+      } else {
+        alert('Failed: ' + data.message);
+      }
+    } catch (e) {
+      alert('Error updating settings');
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
 
   const fetchTreasures = async () => {
     try {
@@ -68,18 +109,30 @@ export default function AdminPage() {
       <header className="header">
         <div>
           <h1>Admin Portal</h1>
-          <p className="subtitle">Generate QR codes for treasures 0-29</p>
+          <p className="subtitle">Manage Game & Treasures</p>
         </div>
-        <button
-          className="reset-btn"
-          onClick={async () => {
-            if (!confirm('Are you sure you want to RESET ALL GAME DATA? This cannot be undone.')) return;
-            await fetch('/api/admin/reset', { method: 'POST' });
-            alert('Game Reset!');
-          }}
-        >
-          RESET GAME
-        </button>
+        <div className="flex gap-4 items-center">
+          {/* Game Control Toggle */}
+          <button
+            className={`px-4 py-2 font-bold text-white rounded shadow transition-colors ${qrEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-red-500 hover:bg-red-600'
+              }`}
+            onClick={toggleGameParams}
+            disabled={loadingSettings}
+          >
+            {loadingSettings ? '...' : (qrEnabled ? 'GAME: LIVE (QR ON)' : 'GAME: PAUSED (QR OFF)')}
+          </button>
+
+          <button
+            className="reset-btn"
+            onClick={async () => {
+              if (!confirm('Are you sure you want to RESET ALL GAME DATA? This cannot be undone.')) return;
+              await fetch('/api/admin/reset', { method: 'POST' });
+              alert('Game Reset!');
+            }}
+          >
+            RESET GAME
+          </button>
+        </div>
       </header>
 
       <section>

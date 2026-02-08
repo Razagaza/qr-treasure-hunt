@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getTreasureData, getGroupData, saveGroupData } from '@/lib/file-db';
+import { db } from '@/lib/db-adapter';
 
 export async function POST(request: Request) {
     try {
@@ -13,7 +13,9 @@ export async function POST(request: Request) {
         }
 
         const group = groupCookie.value;
-        const treasure = await getTreasureData(treasureId);
+
+        // 2. Get Treasure Data
+        const treasure = await db.getTreasure(treasureId);
 
         if (!treasure) {
             return NextResponse.json({ success: false, message: 'Treasure not found' }, { status: 404 });
@@ -26,27 +28,51 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, message: 'Incorrect answer' });
         }
 
-        // Update Group Data
-        const groupData = await getGroupData(group);
+        // 1. Get Group Data (DB)
+        const groupData = await db.getGroup(group);
         if (groupData) {
             // Check if already found to prevent double counting
             if (!groupData.foundTreasures.some(t => t.treasureId === treasureId)) {
-                groupData.score += treasure.points;
+                const pointsAwarded = treasure.points;
+                // 4. Update Group Data (DB)
+                groupData.score += pointsAwarded;
                 groupData.foundTreasures.push({
                     treasureId,
-                    foundAt: new Date().toISOString(),
-                    score: treasure.points
+                    score: pointsAwarded,
+                    foundAt: new Date().toISOString()
                 });
-                await saveGroupData(group, groupData);
+                await db.saveGroup(group, groupData);
             }
         }
 
-        return NextResponse.json({
+        // --- Cookie Persistence (for Read-Only FS) ---
+        const foundCookie = cookieStore.get('treasure-found');
+        let foundlist: number[] = [];
+        if (foundCookie) {
+            try {
+                foundlist = JSON.parse(foundCookie.value);
+            } catch (e) { /* ignore */ }
+        }
+        if (!foundlist.includes(treasureId)) {
+            foundlist.push(treasureId);
+        }
+
+        const response = NextResponse.json({
             success: true,
             message: 'Correct!',
             points: treasure.points,
             hints: treasure.hints
         });
+
+        response.cookies.set({
+            name: 'treasure-found',
+            value: JSON.stringify(foundlist),
+            httpOnly: true,
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7 // 1 week
+        });
+
+        return response;
 
     } catch (error) {
         console.error(error);

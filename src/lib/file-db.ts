@@ -81,7 +81,7 @@ export async function saveGroupData(groupId: string, data: GroupData): Promise<v
         const filePath = path.join(GROUPS_DIR, `${groupId}.json`);
         await fs.writeFile(filePath, JSON.stringify(data, null, 2));
     } catch (error) {
-        console.warn(`[FileDB] Failed to save group ${groupId} to disk (using memory only).`);
+        // console.log(`[FileDB] Memory-only mode for group ${groupId}`);
     }
 }
 
@@ -147,7 +147,7 @@ export async function saveQrCodeMapping(code: string, treasureId: number): Promi
     globalStore.qrCodes[code] = treasureId;
     try {
         await initDataDirs();
-        // Load existing to merge (in case of partial updates, though usually we seed all at once)
+        // Load existing to merge
         let current: Record<string, number> = {};
         try {
             const data = await fs.readFile(QR_CODES_FILE, 'utf-8');
@@ -157,7 +157,8 @@ export async function saveQrCodeMapping(code: string, treasureId: number): Promi
         current[code] = treasureId;
         await fs.writeFile(QR_CODES_FILE, JSON.stringify(current, null, 2));
     } catch (error) {
-        console.warn(`[FileDB] Failed to save QR mapping.`);
+        // Silent fail in read-only environments - we have memory cache
+        // console.debug(`[FileDB] Skipped saving QR mapping (Read-Only FS)`);
     }
 }
 

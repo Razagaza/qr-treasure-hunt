@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import QRCode from 'qrcode';
 import { seed } from '@/lib/seed';
-import { getAllQrMappings } from '@/lib/file-db';
+import { db } from '@/lib/db-adapter';
 
 export async function GET() {
     try {
@@ -12,8 +12,8 @@ export async function GET() {
         // 1. Seed
         await seed();
 
-        // 2. Return JSON List (Skip Image Gen for Read-Only FS)
-        const mappings = await getAllQrMappings();
+        // 2. Return JSON List (Skip        // Get from DB (Supabase or File)
+        const mappings = await db.getAllQrMappings();
 
         // Reverse mapping for display
         const idToCode: Record<number, string> = {};

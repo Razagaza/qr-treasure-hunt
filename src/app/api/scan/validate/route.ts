@@ -29,11 +29,16 @@ export async function POST(request: Request) {
         let baseId: number | null = null;
 
         // 1. Resolve QR to Treasure ID (DB)
+        console.log(`[Validate] Lookup QR: ${qrData}`);
         baseId = await db.getTreasureIdByQr(qrData);
-        console.log('Mapped Treasure ID:', baseId);
+        console.log(`[Validate] Mapped ID: ${baseId}`);
 
         if (baseId === null) {
-            console.log('Error: Invalid QR code (mapping not found)');
+            console.error(`[Validate] Error: QR Mapping Failed for code '${qrData}'`);
+            // Check if DB is even connected or has data
+            if (process.env.NODE_ENV === 'development') {
+                console.log('[Validate] Debug info: Ensure qr_codes table has data and code matches exactly.');
+            }
             return NextResponse.json({ success: false, message: 'Invalid or unknown QR code' }, { status: 400 });
         }
 

@@ -60,7 +60,11 @@ export const SupabaseAdapter: IDatabase = {
             .eq('id', id)
             .single();
 
-        if (error || !data) return null;
+        if (error) {
+            console.error(`[SupabaseAdapter] getTreasure Error (ID: ${id}):`, error.message);
+            return null;
+        }
+        if (!data) return null;
         return data.content as TreasureData;
     },
 
@@ -84,13 +88,18 @@ export const SupabaseAdapter: IDatabase = {
     },
 
     async getTreasureIdByQr(code: string) {
+        // console.log(`[SupabaseAdapter] Querying QR Code: ${code}`);
         const { data, error } = await supabase
             .from('qr_codes')
             .select('treasure_id')
             .eq('code', code)
             .single();
 
-        if (error || !data) return null;
+        if (error) {
+            console.error(`[SupabaseAdapter] getTreasureIdByQr Error (Code: ${code}):`, error.message, error.details);
+            return null;
+        }
+        if (!data) return null;
         return data.treasure_id;
     },
 

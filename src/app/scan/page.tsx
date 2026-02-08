@@ -174,6 +174,12 @@ export default function ScanPage() {
       } else {
         setStatus('error');
         setMessage(data.message || 'Incorrect Answer');
+        // If failedAndSaved is true, we show hints (Hint 2)
+        if (data.failedAndSaved && data.hints) {
+          setHints(data.hints);
+        } else {
+          setHints([]);
+        }
       }
     } catch (err) {
       setStatus('error');
@@ -219,6 +225,17 @@ export default function ScanPage() {
           <AlertCircle size={64} color="#ef4444" />
           <h2 className="title text-red">Oops!</h2>
           <p className="message">{message}</p>
+
+          {/* Show Failure Hints if available */}
+          {hints.length > 0 && (
+            <div className="hints-box">
+              <h3 className="hints-title">Hint Unlocked:</h3>
+              {hints.map((h: string, i: number) => (
+                <p key={i} className="hint-item">💡 {h}</p>
+              ))}
+            </div>
+          )}
+
           <button className="btn-primary" onClick={handleClose}>Close</button>
         </div>
       )}

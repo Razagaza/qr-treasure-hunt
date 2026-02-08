@@ -13,7 +13,7 @@ export interface IDatabase {
     saveTreasure(id: number, data: TreasureData): Promise<void>;
 
     // QR Codes
-    getTreasureIdByQr(code: string): Promise<number | null>;
+    getTreasureIdByQr(code: string): Promise<{ id: number; active: boolean } | null>;
     saveQrCodeMapping(code: string, treasureId: number): Promise<void>;
     getAllQrMappings(): Promise<Record<string, number>>;
 
@@ -91,7 +91,7 @@ export const SupabaseAdapter: IDatabase = {
         // console.log(`[SupabaseAdapter] Querying QR Code: ${code}`);
         const { data, error } = await supabase
             .from('qr_codes')
-            .select('treasure_id')
+            .select('treasure_id, active')
             .eq('code', code)
             .single();
 
@@ -100,7 +100,14 @@ export const SupabaseAdapter: IDatabase = {
             return null;
         }
         if (!data) return null;
-        return data.treasure_id;
+
+        // Return object with active status (requires interface update if we want strict typing, 
+        // but for now we can rely on logic in validate route to handle the return type)
+        // Actually, getTreasureIdByQr is typed to return Promise<number | null>. 
+        // We should change the interface or return a special value. 
+        // Strategy: We will hack it for now by Returning NEGATIVE ID if inactive? 
+        // OR better: Update interface. Let's update interface.
+        return data.active === false ? { id: data.treasure_id, active: false } : { id: data.treasure_id, active: true };
     },
 
     async saveQrCodeMapping(code: string, treasureId: number) {
@@ -150,7 +157,11 @@ export const FileAdapter: IDatabase = {
     getTreasure: fileDb.getTreasureData,
     getAllTreasures: fileDb.getAllTreasures,
     saveTreasure: fileDb.saveTreasureData,
-    getTreasureIdByQr: fileDb.getTreasureIdByQr,
+    getTreasureIdByQr: async (code) => {
+        const id = await fileDb.getTreasureIdByQr(code);
+        if (id === null) return null;
+        return { id, active: true }; // File DB assumes always active for now
+    },
     saveQrCodeMapping: fileDb.saveQrCodeMapping,
     getAllQrMappings: fileDb.getAllQrMappings,
 

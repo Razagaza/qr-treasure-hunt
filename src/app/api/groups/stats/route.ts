@@ -52,14 +52,26 @@ export async function GET() {
             } catch (e) { console.warn('[Stats] Cookie parse failed', e); }
         }
 
-        // Enrich found treasures with details
+        // Enrich found treasures with details and correct hint
         const foundTreasures = await Promise.all(
             groupData.foundTreasures.map(async (ft) => {
                 const treasure = await db.getTreasure(ft.treasureId);
+                let displayHints: string[] = [];
+
+                if (treasure && treasure.hints) {
+                    if (ft.score > 0) {
+                        // Success -> Hint 1
+                        if (treasure.hints.length > 0) displayHints = [treasure.hints[0]];
+                    } else {
+                        // Failure -> Hint 2
+                        if (treasure.hints.length > 1) displayHints = [treasure.hints[1]];
+                    }
+                }
+
                 return {
                     ...ft,
                     question: treasure?.question,
-                    hints: treasure?.hints
+                    hints: displayHints
                 };
             })
         );

@@ -25,12 +25,48 @@ export async function POST(request: Request) {
         const isCorrect = treasure.answer.trim().toLowerCase() === answer.trim().toLowerCase();
 
         if (!isCorrect) {
-            // Return Failure Message + 2nd Hint (Index 1)
-            return NextResponse.json({
+            // "One Strike" Logic: Failure = Found with 0 Score
+            // 1. Get Group Data (DB)
+            const groupData = await db.getGroup(group);
+            if (groupData) {
+                // Check if already found (prevent double writing)
+                if (!groupData.foundTreasures.some(t => t.treasureId === treasureId)) {
+                    groupData.foundTreasures.push({
+                        treasureId,
+                        score: 0, // Zero points for failure
+                        foundAt: new Date().toISOString()
+                    });
+                    await db.saveGroup(group, groupData);
+                }
+            }
+
+            // --- Cookie Persistence ---
+            const foundCookie = cookieStore.get('treasure-found');
+            let foundlist: number[] = [];
+            if (foundCookie) {
+                try { foundlist = JSON.parse(foundCookie.value); } catch (e) { /* ignore */ }
+            }
+            if (!foundlist.includes(treasureId)) {
+                foundlist.push(treasureId);
+            }
+            // We need to update cookie in response, so we create response below
+
+            const response = NextResponse.json({
                 success: false,
-                message: 'Incorrect answer',
-                hints: treasure.hints.length > 1 ? [treasure.hints[1]] : []
+                message: '틀렸습니다! 힌트 2가 공개됩니다. (재도전 불가)',
+                hints: treasure.hints.length > 1 ? [treasure.hints[1]] : [],
+                failedAndSaved: true // Flag for frontend
             });
+
+            response.cookies.set({
+                name: 'treasure-found',
+                value: JSON.stringify(foundlist),
+                httpOnly: true,
+                path: '/',
+                maxAge: 60 * 60 * 24 * 7 // 1 week
+            });
+
+            return response;
         }
 
         // 1. Get Group Data (DB)

@@ -151,12 +151,21 @@ export default function AdminPage() {
         <h2>🛠 Test Zone</h2>
         <p style={{ opacity: 0.7, marginBottom: '1rem' }}>Scan this QR code to test the game flow (Treasure ID: 0)</p>
 
-        <div style={{ background: 'white', padding: '1rem', display: 'inline-block', borderRadius: '8px' }}>
-          <QRCodeSVG value={JSON.stringify({ id: encrypt('0'), type: 'treasure' })} size={200} />
-        </div>
-        <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', fontFamily: 'monospace', color: '#888' }}>
-          Raw: {JSON.stringify({ id: encrypt('0').substring(0, 10) + '...', type: 'treasure' })}
-        </p>
+        {treasures.find(t => t.id === 0)?.encryptedQr ? (
+          <>
+            <div style={{ background: 'white', padding: '1rem', display: 'inline-block', borderRadius: '8px' }}>
+              <QRCodeSVG
+                value={treasures.find(t => t.id === 0)!.encryptedQr!}
+                size={200}
+              />
+            </div>
+            <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', fontFamily: 'monospace', color: '#888' }}>
+              Raw: {treasures.find(t => t.id === 0)!.encryptedQr!.substring(0, 10)}...
+            </p>
+          </>
+        ) : (
+          <p style={{ color: 'orange' }}>Loading or Treasure 0 not found...</p>
+        )}
       </section>
     </div>
   );

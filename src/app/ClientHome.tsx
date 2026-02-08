@@ -67,7 +67,7 @@ export default function ClientHome() {
                                     <button
                                         key={group}
                                         onClick={() => handleGroupSelect(group)}
-                                        className="relative group relative overflow-hidden p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 text-center"
+                                        className="relative group overflow-hidden p-4 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20 active:scale-95 text-center aspect-square flex flex-col items-center justify-center"
                                     >
                                         <div className="text-3xl font-bold mb-1">{group}</div>
                                         <div className="text-xs text-purple-200/60 uppercase tracking-wider">Team</div>

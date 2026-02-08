@@ -1,39 +1,45 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { decrypt } from '@/lib/crypto';
-import { getTreasureData, getGroupData } from '@/lib/file-db';
+import { getTreasureData, getGroupData, getTreasureIdByQr } from '@/lib/file-db';
 
 export async function POST(request: Request) {
     try {
         const { qrData } = await request.json();
+        console.log('--- [Validate API] Request Start ---');
+        console.log('Received qrData:', qrData);
+
         const cookieStore = await cookies();
         const groupCookie = cookieStore.get('treasure-group');
 
         if (!groupCookie) {
+            console.log('Error: No group cookie');
             return NextResponse.json({ success: false, message: 'No group selected' }, { status: 401 });
         }
 
         const group = groupCookie.value;
-        let baseId: number;
+        let baseId: number | null = null;
 
-        // 1. Decrypt QR (Handles both raw string and JSON wrapper)
-        let encryptedString = qrData;
+        // 1. Extract Code and Lookup ID
+        // Support both raw string and JSON wrapper ({"id":"code","type":"treasure"})
+        let codeToLookup = qrData;
+
         try {
-            // Try to parse as JSON first
             const parsed = JSON.parse(qrData);
             if (parsed.type === 'treasure' && parsed.id) {
-                encryptedString = parsed.id;
+                codeToLookup = parsed.id;
             }
         } catch (e) {
-            // Not JSON, assume raw string
+            // Not JSON, use raw
         }
 
-        try {
-            const decrypted = decrypt(encryptedString);
-            baseId = parseInt(decrypted, 10);
-            if (isNaN(baseId)) throw new Error('Invalid ID');
-        } catch (e) {
-            return NextResponse.json({ success: false, message: 'Invalid or corrupted QR code' }, { status: 400 });
+        console.log('Code extracted for lookup:', codeToLookup);
+
+        baseId = await getTreasureIdByQr(codeToLookup);
+        console.log('Mapped Treasure ID:', baseId);
+
+        if (baseId === null) {
+            console.log('Error: Invalid QR code (mapping not found)');
+            return NextResponse.json({ success: false, message: 'Invalid or unknown QR code' }, { status: 400 });
         }
 
         // 2. Calculate Target ID based on Group Offset
@@ -41,11 +47,14 @@ export async function POST(request: Request) {
         const offset = offsets[group] || 0;
         const targetId = (baseId + offset) % 30;
 
+        console.log(`Group: ${group}, Offset: ${offset}, Target Treasure ID: ${targetId}`);
+
         // 3. Check if already found
         const groupData = await getGroupData(group);
         const isAlreadyFound = groupData?.foundTreasures.some(t => t.treasureId === targetId);
 
         if (isAlreadyFound) {
+            console.log('Status: Already found');
             return NextResponse.json({
                 success: false,
                 message: 'Already found this treasure!',
@@ -56,8 +65,12 @@ export async function POST(request: Request) {
         // 4. Get Treasure Data
         const treasure = await getTreasureData(targetId);
         if (!treasure) {
+            console.log('Error: Treasure data missing for ID', targetId);
             return NextResponse.json({ success: false, message: 'Treasure data not found. Contact Admin.' }, { status: 404 });
         }
+
+        console.log('Success: Return treasure data');
+        console.log('--- [Validate API] Check End ---');
 
         // Return strict data needed for solving (hide answer/hints)
         return NextResponse.json({
@@ -73,7 +86,7 @@ export async function POST(request: Request) {
         });
 
     } catch (error) {
-        console.error(error);
+        console.error('[Validate API] Server Error:', error);
         return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
     }
 }

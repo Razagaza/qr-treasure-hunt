@@ -134,3 +134,53 @@ export async function getAllTreasures(): Promise<TreasureData[]> {
         return [];
     }
 }
+// --- QR Code Operations (Mapping) ---
+
+const QR_CODES_FILE = path.join(DATA_DIR, 'qr_codes.json');
+
+// Memory Cache for QRs
+if (!globalStore.qrCodes) {
+    globalStore.qrCodes = {}; // format: { "code_string": treasureId }
+}
+
+export async function saveQrCodeMapping(code: string, treasureId: number): Promise<void> {
+    globalStore.qrCodes[code] = treasureId;
+    try {
+        await initDataDirs();
+        // Load existing to merge (in case of partial updates, though usually we seed all at once)
+        let current: Record<string, number> = {};
+        try {
+            const data = await fs.readFile(QR_CODES_FILE, 'utf-8');
+            current = JSON.parse(data);
+        } catch (e) { /* ignore missing */ }
+
+        current[code] = treasureId;
+        await fs.writeFile(QR_CODES_FILE, JSON.stringify(current, null, 2));
+    } catch (error) {
+        console.warn(`[FileDB] Failed to save QR mapping.`);
+    }
+}
+
+export async function getTreasureIdByQr(code: string): Promise<number | null> {
+    if (globalStore.qrCodes[code] !== undefined) return globalStore.qrCodes[code];
+
+    try {
+        const data = await fs.readFile(QR_CODES_FILE, 'utf-8');
+        const parsed = JSON.parse(data);
+        globalStore.qrCodes = parsed; // Update cache
+        return parsed[code] ?? null;
+    } catch (error) {
+        return null;
+    }
+}
+
+export async function getAllQrMappings(): Promise<Record<string, number>> {
+    try {
+        const data = await fs.readFile(QR_CODES_FILE, 'utf-8');
+        const parsed = JSON.parse(data);
+        globalStore.qrCodes = parsed;
+        return parsed;
+    } catch (error) {
+        return globalStore.qrCodes || {};
+    }
+}

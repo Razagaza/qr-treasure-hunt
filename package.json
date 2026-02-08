@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-qrs": "tsx scripts/generate_assets.ts"
   },
   "dependencies": {
     "html5-qrcode": "^2.3.8",

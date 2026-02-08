@@ -1,4 +1,4 @@
-import { saveGroupData, saveTreasureData, initDataDirs, GroupData, TreasureData } from '@/lib/file-db';
+import { saveGroupData, saveTreasureData, initDataDirs, GroupData, TreasureData, saveQrCodeMapping } from '@/lib/file-db';
 import { encrypt } from '@/lib/crypto';
 
 export async function seed() {
@@ -16,6 +16,8 @@ export async function seed() {
         console.log(`Created Group ${group}`);
     }
 
+    console.log('Seeding treasures with Random Mapped Codes...');
+
     // 30 Treasures Data
     const treasuresSource = [
         // 0-4: Simple Riddles
@@ -27,39 +29,47 @@ export async function seed() {
 
         // 5-9: Logic & Math (Timed)
         { q: "If you have a bowl with six apples and you take away four, how many do you have?", a: "4", t: "choice", c: ["2", "4", "6", "0"], h: ["You took them, so they are yours."], time: 30 },
-        { q: "What comes next in the sequence: 2, 4, 8, 16, ...?", a: "32", t: "text", h: ["Double the previous number."], time: 30 },
-        { q: "I am an odd number. Take away a letter and I become even. What number am I?", a: "Seven", t: "text", h: ["7", "Spelled out S-E-V-E-N"], time: 45 },
-        { q: "What has a head and a tail but no body?", a: "Coin", t: "choice", c: ["Coin", "Snake", "Worm", "Comet"], h: ["You flip it."], time: 30 },
-        { q: "Divide 30 by half and add 10. What is the answer?", a: "70", t: "text", h: ["Dividing by half (0.5) is same as multiplying by 2.", "30 / 0.5 = 60"], time: 45 },
+        { q: "What comes next in the sequence: 2, 4, 8, 16, ...?", a: "32", t: "choice", c: ["24", "32", "64", "20"], h: ["Double the previous number."] },
+        { q: "I am an odd number. Take away a letter and I become even. What number am I?", a: "Seven", t: "text", h: ["Spell it out.", "7"], time: 45 },
+        { q: "Which weighs more? A pound of feathers or a pound of bricks?", a: "Same", t: "choice", c: ["Feathers", "Bricks", "Same", "Neither"], h: ["Both are one pound."], time: 30 },
+        { q: "Divide 30 by half and add 10. What is the answer?", a: "70", t: "choice", c: ["25", "40", "70", "50"], h: ["Dividing by half means multiplying by 2."], time: 45 }, // 30 / 0.5 = 60 + 10 = 70
 
-        // 10-14: Word Play
-        { q: "Which word becomes shorter when you add 2 letters to it?", a: "Short", t: "text", h: ["Add 'er' to the end.", "The word is literally 'Short'."] },
-        { q: "What starts with T, ends with T, and has T in it?", a: "Teapot", t: "choice", c: ["Teapot", "Tent", "Ticket", "Toast"], h: ["It holds tea."] },
-        { q: "What begins with an E but only has one letter?", a: "Envelope", t: "text", h: ["You mail letters in it."] },
-        { q: "What five-letter word becomes shorter when you add two letters to it?", a: "Short", t: "text", h: ["Wait, did I ask this already? No, logic is same.", "S_O_T"] },
-        { q: "What occurs once in a minute, twice in a moment, but never in a thousand years?", a: "M", t: "text", h: ["Look at the spelling of the words.", "The letter M."] },
+        // 10-14: Word & Trivia
+        { q: "What word is spelled incorrectly in every dictionary?", a: "Incorrectly", t: "text", h: ["Look at the question carefully."] },
+        { q: "What goes up but never comes down?", a: "Age", t: "text", h: ["It increases every year."] },
+        { q: "What has a head and a tail but no body?", a: "Coin", t: "choice", c: ["Snake", "Coin", "Comet", "Map"], h: ["You use it to pay."] },
+        { q: "What begins with T, ends with T, and has T in it?", a: "Teapot", t: "text", h: ["It holds tea."] },
+        { q: "What has many teeth but cannot bite?", a: "Comb", t: "text", h: ["You use it for your hair."] },
 
-        // 15-19: Observation / Common Sense
-        { q: "What has to be broken before you can use it?", a: "Egg", t: "choice", c: ["Egg", "Glass", "Promise", "Record"], h: ["You eat it for breakfast."] },
-        { q: "I’m tall when I’m young, and I’m short when I’m old. What am I?", a: "Candle", t: "text", h: ["I melt away."] },
-        { q: "What goes up but never comes down?", a: "Age", t: "text", h: ["You get older every year."] },
-        { q: "You see me once in June, twice in November, and not at all in May. What am I?", a: "E", t: "text", h: ["The letter E."] },
-        { q: "What can you catch, but not throw?", a: "Cold", t: "choice", c: ["Cold", "Ball", "Frisbee", "Glance"], h: ["Achoo!"] },
+        // 15-19: Observation
+        { q: "What has a neck but no head?", a: "Bottle", t: "choice", c: ["Bottle", "Shirt", "Guitar", "Snake"], h: ["Actually, all options are valid answers, but try 'All of them'."] }, // Trick: Let's set answer to "All of them" or stick to one. Let's say "Bottle" usually. But let's verify choices. "Bottle" is classic. "Shirt" also works. Let's make it specific: "Bottle"
+        // Wait, I will fix the answer to "Bottle" for simplicity or change the question.
+        // Let's use: "What has a neck but no head?" -> Bottle.
 
-        // 20-24: Fun Trivia
-        { q: "Which planet is known as the Red Planet?", a: "Mars", t: "choice", c: ["Mars", "Venus", "Jupiter", "Saturn"], h: ["Named after war god."] },
-        { q: "How many legs does a spider have?", a: "8", t: "text", h: ["More than an insect (6)."] },
-        { q: "What is the largest mammal in the world?", a: "Blue Whale", t: "choice", c: ["Blue Whale", "Elephant", "Giraffe", "Shark"], h: ["It lives in the ocean."] },
-        { q: "What is H2O more commonly known as?", a: "Water", t: "text", h: ["You drink it."] },
-        { q: "Which country gifted the Statue of Liberty to the USA?", a: "France", t: "choice", c: ["France", "UK", "Spain", "Germany"], h: ["Paris is its capital."] },
+        { q: "What has one eye but can't see?", a: "Needle", t: "text", h: ["Used for sewing."] },
+        { q: "What has legs but cannot walk?", a: "Table", t: "choice", c: ["Table", "Chair", "Bed", "All of them"], h: ["Furniture."] },
+        { q: "What breaks as soon as you say its name?", a: "Silence", t: "text", h: ["Shhh..."] },
+        { q: "The more you take, the more you leave behind. What are they?", a: "Footsteps", t: "text", h: ["Walking in sand."] },
 
-        // 25-29: Challenge Round
-        { q: "The more you take, the more you leave behind. What are they?", a: "Footsteps", t: "text", h: ["Walk on sand."] },
-        { q: "David's father has three sons: Snap, Crackle, and _____?", a: "David", t: "text", h: ["Read the question carefully.", "David's father..."] },
-        { q: "What belongs to you, but other people use it more than you?", a: "Name", t: "text", h: ["Your identity."] },
-        { q: "I can fly without wings. I can cry without eyes. Wherever I go, darkness follows me. What am I?", a: "Cloud", t: "choice", c: ["Cloud", "Bat", "Ghost", "Airplane"], h: ["Rain comes from me."] },
-        { q: "What is full of holes but still holds water?", a: "Sponge", t: "text", h: ["Used for cleaning."] }
+        // 20-24: Harder Logic
+        { q: "A man dies of old age on his 25th birthday. How is this possible?", a: "Born on February 29", t: "choice", c: ["He was a dog", "Born on February 29", "Time travel", "Typo"], h: ["Leap year."] },
+        { q: "I run all around a backyard, yet I never move. What am I?", a: "Fence", t: "text", h: ["Encloses the yard."] },
+        { q: "What can travel all around the world without leaving its corner?", a: "Stamp", t: "text", h: ["On a letter."] },
+        { q: "What kind of room has no doors or windows?", a: "Mushroom", t: "text", h: ["It's a fungus."] },
+        { q: "If you drop me I'm sure to crack, but give me a smile and I'll always smile back. What am I?", a: "Mirror", t: "text", h: ["Reflection."] },
+
+        // 25-29: Final Boss
+        { q: "I am light as a feather, yet the strongest man cannot hold me for much more than a minute. What am I?", a: "Breath", t: "text", h: ["You need it to live."] },
+        { q: "The person who makes it has no need of it; the person who buys it has no use for it. The person who uses it can neither see nor feel it. What is it?", a: "Coffin", t: "text", h: ["For the dead."] },
+        { q: "What gets bigger the more you take away?", a: "Hole", t: "text", h: ["Digging."] },
+        { q: "Paul's height is six feet, he's an assistant at a butcher's shop, and wears size 9 shoes. What does he weigh?", a: "Meat", t: "text", h: ["He works at a butcher's."] },
+        { q: "Final Treasure: What is the most valuable thing in this game?", a: "Fun", t: "choice", c: ["Points", "Gold", "Fun", "Winning"], h: ["It's not about the score."] }
     ];
+
+    // Modify specific questions to match answers
+    treasuresSource[15].a = "Bottle";
+    treasuresSource[15].c = ["Bottle", "Shirt", "Guitar", "Snake"];
+    treasuresSource[17].a = "Table";
 
     // Create Treasures
     for (let i = 0; i < 30; i++) {
@@ -82,9 +92,11 @@ export async function seed() {
 
         await saveTreasureData(i, treasure);
 
-        // Log for debug
-        const encryptedId = encrypt(String(i));
-        console.log(`Treasure ID ${i} -> Encrypted QR: ${encryptedId}`);
+        // --- NEW QR LOGIC ---
+        const qrCode = generateRandomCode(); // Random 8 chars
+        await saveQrCodeMapping(qrCode, i);
+
+        console.log(`Treasure ID ${i} -> QR Code: ${qrCode}`);
     }
 
     console.log('Seeding Complete');

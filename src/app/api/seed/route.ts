@@ -4,9 +4,9 @@ import { seed } from '@/lib/seed';
 export async function GET() {
     try {
         await seed();
-        return NextResponse.json({ success: true, message: 'Data seeded successfully' });
+        return NextResponse.json({ success: true, message: 'Seeding complete' });
     } catch (error) {
-        console.error(error);
-        return NextResponse.json({ success: false, error: 'Failed to seed data' }, { status: 500 });
+        console.error('Seeding failed:', error);
+        return NextResponse.json({ success: false, message: 'Seeding failed' }, { status: 500 });
     }
 }

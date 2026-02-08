@@ -1,21 +1,24 @@
 import { NextResponse } from 'next/server';
-import { getAllTreasures } from '@/lib/file-db';
-import { encrypt } from '@/lib/crypto';
+import { getAllTreasures, getAllQrMappings } from '@/lib/file-db';
 
 export async function GET() {
     try {
         const treasures = await getAllTreasures();
+        const qrMappings = await getAllQrMappings(); // { code: id }
 
-        const enriched = treasures.map(t => ({
-            id: t.id,
-            question: t.question,
-            points: t.points,
-            encryptedQr: encrypt(String(t.id))
+        // Reverse mapping: { id: code }
+        const idToCode: Record<number, string> = {};
+        for (const [code, id] of Object.entries(qrMappings)) {
+            idToCode[id] = code;
+        }
+
+        const treasuresWithQr = treasures.map(t => ({
+            ...t,
+            encryptedQr: idToCode[t.id] // Use 'encryptedQr' key for frontend compatibility, though it's raw code now
         }));
 
-        return NextResponse.json({ success: true, treasures: enriched });
+        return NextResponse.json({ success: true, treasures: treasuresWithQr });
     } catch (error) {
-        console.error(error);
-        return NextResponse.json({ success: false, message: 'Server error' }, { status: 500 });
+        return NextResponse.json({ success: false, message: 'Failed to fetch treasures' }, { status: 500 });
     }
 }

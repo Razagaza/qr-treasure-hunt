@@ -39,12 +39,23 @@ export async function getGroupData(groupId: string): Promise<GroupData | null> {
         const filePath = path.join(GROUPS_DIR, `${groupId}.json`);
         const data = await fs.readFile(filePath, 'utf-8');
         return JSON.parse(data);
-    } catch (error) {
+    } catch (error: any) {
+        // Auto-health: If file missing but valid group, create it
+        if (error.code === 'ENOENT' && ['A', 'B', 'C', 'D'].includes(groupId)) {
+            const initialData: GroupData = {
+                id: groupId,
+                score: 0,
+                foundTreasures: []
+            };
+            await saveGroupData(groupId, initialData);
+            return initialData;
+        }
         return null;
     }
 }
 
 export async function saveGroupData(groupId: string, data: GroupData): Promise<void> {
+    await initDataDirs(); // Ensure dirs exist before write
     const filePath = path.join(GROUPS_DIR, `${groupId}.json`);
     await fs.writeFile(filePath, JSON.stringify(data, null, 2));
 }

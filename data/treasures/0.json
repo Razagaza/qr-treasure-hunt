@@ -1,3 +1,13 @@
 {
-    "id"
+    "id": 0,
+    "question": "현재 진행자 1이랑 3의 스마트폰의 '배터리 효율'을 각각 합산하면?",
+    "type": "text",
+    "answer": "178",
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
 }

@@ -43,6 +43,7 @@ export async function POST() {
             results.errors.push('Groups dir not found or empty');
         }
 
+        /*
         // 2. Treasures
         try {
             const treasuresDir = path.join(DATA_DIR, 'treasures');
@@ -80,6 +81,7 @@ export async function POST() {
         } catch (e) {
             results.errors.push('qr_codes.json not found');
         }
+        */
 
         return NextResponse.json({ success: true, results });
 

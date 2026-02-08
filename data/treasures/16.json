@@ -1,0 +1,19 @@
+{
+    "id": 16,
+    "question": "진행자 3의 chat gpt 다음 결제 예정일은 언제인가?",
+    "type": "choice",
+    "answer": "2월 23일",
+    "choices": [
+        "2월 20일",
+        "2월 25일",
+        "2월 23일",
+        "2월 28일"
+    ],
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

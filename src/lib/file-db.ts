@@ -22,7 +22,7 @@ export interface GroupData {
 export interface TreasureData {
     id: number;
     question: string;
-    type: 'text' | 'choice';
+    type: 'text' | 'choice' | 'number';
     choices?: string[];
     answer: string;
     points: number;

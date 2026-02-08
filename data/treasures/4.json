@@ -1,0 +1,13 @@
+{
+    "id": 4,
+    "question": "이 게임에 참여하고 있는 전체 인원(17명)의 '생년월일 중 일(Day)중 일의자리'만 모두 더하면?",
+    "type": "text",
+    "answer": "98",
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

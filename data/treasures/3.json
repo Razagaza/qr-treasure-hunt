@@ -1,0 +1,13 @@
+{
+    "id": 3,
+    "question": "신공학관의 지하 1층에서 8층까지 총 계단 수는 몇 개인가?",
+    "type": "text",
+    "answer": "190",
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

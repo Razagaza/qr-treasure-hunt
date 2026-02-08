@@ -1,0 +1,13 @@
+{
+    "id": 7,
+    "question": "진행자 3의 스마트폰 사진첩에 있는 전체 사진 및 동영상의 총 개수는?",
+    "type": "text",
+    "answer": "8486",
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

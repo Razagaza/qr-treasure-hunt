@@ -1,0 +1,17 @@
+{
+    "id": 21,
+    "question": "현재 큐랩 내 포닥 + 대학원생 + 인턴 총인원은 22명이다",
+    "type": "choice",
+    "answer": "O",
+    "choices": [
+        "O",
+        "X"
+    ],
+    "points": 1,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 7,
+    "active": true
+}

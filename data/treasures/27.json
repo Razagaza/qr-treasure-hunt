@@ -1,0 +1,17 @@
+{
+    "id": 27,
+    "question": "독일과 이탈리아는 붙어있지 않다",
+    "type": "choice",
+    "answer": "O",
+    "choices": [
+        "O",
+        "X"
+    ],
+    "points": 1,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 5,
+    "active": true
+}

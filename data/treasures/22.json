@@ -1,0 +1,17 @@
+{
+    "id": 22,
+    "question": "올해는 병오년으로 붉은 말의 해이다",
+    "type": "choice",
+    "answer": "O",
+    "choices": [
+        "O",
+        "X"
+    ],
+    "points": 1,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 5,
+    "active": true
+}

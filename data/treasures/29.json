@@ -1,0 +1,17 @@
+{
+    "id": 29,
+    "question": "현재 랩내 작은 칠판은 판서가 되어 있다",
+    "type": "choice",
+    "answer": "X",
+    "choices": [
+        "O",
+        "X"
+    ],
+    "points": 1,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 5,
+    "active": true
+}

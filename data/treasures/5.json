@@ -1,0 +1,13 @@
+{
+    "id": 5,
+    "question": "진행자 3의 정확한 키를 말하시오 소수점 한자리수 까지",
+    "type": "text",
+    "answer": "187.7",
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

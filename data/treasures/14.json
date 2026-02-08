@@ -1,0 +1,13 @@
+{
+    "id": 14,
+    "question": "랩실 네 에어컨의 에너지등급은?",
+    "type": "text",
+    "answer": "4",
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

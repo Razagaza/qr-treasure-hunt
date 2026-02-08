@@ -1,0 +1,13 @@
+{
+    "id": 8,
+    "question": "진행자 1의 사파리에서 탭그룹 개수는?",
+    "type": "text",
+    "answer": "7",
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

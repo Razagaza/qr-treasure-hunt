@@ -11,7 +11,7 @@ type ScanStatus = 'idle' | 'scanning' | 'validating' | 'solving' | 'submitting' 
 interface Treasure {
   id: number;
   question: string;
-  type: 'text' | 'choice';
+  type: 'text' | 'choice' | 'number';
   choices?: string[];
   points: number;
   timeLimit?: number;
@@ -257,9 +257,10 @@ export default function ScanPage() {
             </div>
           ) : (
             <input
-              type="text"
+              type={treasure.type === 'number' ? 'text' : 'text'}
+              inputMode={treasure.type === 'number' ? 'decimal' : 'text'}
               className="text-input"
-              placeholder="Enter your answer..."
+              placeholder={treasure.type === 'number' ? 'Enter number...' : 'Enter your answer...'}
               value={answer}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setAnswer(e.target.value)}
             />
@@ -271,7 +272,7 @@ export default function ScanPage() {
               onClick={handleClose}
               disabled={isTimerActive}
             >
-              Close
+              {timeLeft !== null && timeLeft > 0 ? `${timeLeft}s` : 'Close'}
             </button>
             <button
               className="btn-primary"

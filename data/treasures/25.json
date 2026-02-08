@@ -1,0 +1,17 @@
+{
+    "id": 25,
+    "question": "윷놀이에서 걸은 염소다",
+    "type": "choice",
+    "answer": "X",
+    "choices": [
+        "O",
+        "X"
+    ],
+    "points": 1,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 7,
+    "active": true
+}

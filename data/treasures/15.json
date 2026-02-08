@@ -1,0 +1,19 @@
+{
+    "id": 15,
+    "question": "진행자 3의 혈액형을 RH까지 맞추시오",
+    "type": "choice",
+    "answer": "AB,RH-",
+    "choices": [
+        "A,RH-",
+        "B,RH+",
+        "AB,RH-",
+        "O,RH+"
+    ],
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

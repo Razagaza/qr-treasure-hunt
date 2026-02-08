@@ -1,0 +1,19 @@
+{
+    "id": 11,
+    "question": "진행자 1 의 아이폰 일련 번호를 말씀하세요",
+    "type": "choice",
+    "answer": "JFY2Y3XXQ4",
+    "choices": [
+        "JFY2Y3XXQ4",
+        "JFY3XXQ4",
+        "J2FY2Y3X5XQ4",
+        "JFY2Y3X5XQ4"
+    ],
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

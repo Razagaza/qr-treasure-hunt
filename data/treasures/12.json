@@ -1,0 +1,13 @@
+{
+    "id": 12,
+    "question": "진행자 3의 카카오톡 '친구' 총 명수는 몇 명인가? (숨김/차단 친구 제외)",
+    "type": "text",
+    "answer": "711",
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

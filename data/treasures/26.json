@@ -1,0 +1,18 @@
+{
+    "id": 26,
+    "question": "세 명이 나란히 손을 잡고 있습니다.<br>[남자] ㅡ [?] ㅡ [여자]<br>손을 맞잡은 남자와 여자가 있나요?",
+    "type": "choice",
+    "answer": "있다",
+    "choices": [
+        "있다",
+        "없다",
+        "알 수 없다"
+    ],
+    "points": 1,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 10,
+    "active": true
+}

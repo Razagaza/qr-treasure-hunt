@@ -1,0 +1,19 @@
+{
+    "id": 9,
+    "question": "진행자 1의 자리에 있는 노란색 노트 표지에는 무슨 글자가 있을까?",
+    "type": "choice",
+    "answer": "TGI. SEJIN-CI",
+    "choices": [
+        "TGI. SEJIN-CI",
+        "insilico",
+        "KIA",
+        "러닝 텐서플로"
+    ],
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

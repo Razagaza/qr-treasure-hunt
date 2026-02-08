@@ -1,0 +1,13 @@
+{
+    "id": 2,
+    "question": "진행자1의 지갑 속에 있는 카드 + 면허증 개수는?",
+    "type": "text",
+    "answer": "5",
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

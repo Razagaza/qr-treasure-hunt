@@ -1,0 +1,19 @@
+{
+    "id": 18,
+    "question": "진행자 1의 휴대폰에 '등록된' 블루투스 기기는 총 몇 개인가?",
+    "type": "choice",
+    "answer": "5",
+    "choices": [
+        "2",
+        "3",
+        "4",
+        "5"
+    ],
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

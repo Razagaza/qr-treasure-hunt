@@ -1,0 +1,17 @@
+{
+    "id": 28,
+    "question": "9기의 입학년도는 2023년이다",
+    "type": "choice",
+    "answer": "O",
+    "choices": [
+        "O",
+        "X"
+    ],
+    "points": 1,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 7,
+    "active": true
+}

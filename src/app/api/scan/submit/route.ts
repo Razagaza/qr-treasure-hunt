@@ -25,7 +25,12 @@ export async function POST(request: Request) {
         const isCorrect = treasure.answer.trim().toLowerCase() === answer.trim().toLowerCase();
 
         if (!isCorrect) {
-            return NextResponse.json({ success: false, message: 'Incorrect answer' });
+            // Return Failure Message + 2nd Hint (Index 1)
+            return NextResponse.json({
+                success: false,
+                message: 'Incorrect answer',
+                hints: treasure.hints.length > 1 ? [treasure.hints[1]] : []
+            });
         }
 
         // 1. Get Group Data (DB)
@@ -61,7 +66,7 @@ export async function POST(request: Request) {
             success: true,
             message: 'Correct!',
             points: treasure.points,
-            hints: treasure.hints
+            hints: treasure.hints.length > 0 ? [treasure.hints[0]] : [] // Return 1st Hint (Index 0)
         });
 
         response.cookies.set({

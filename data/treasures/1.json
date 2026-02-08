@@ -1,0 +1,19 @@
+{
+    "id": 1,
+    "question": "2월 5일 기준 진행자 3이 먹은 점심은  무엇인가?",
+    "type": "choice",
+    "answer": "유부잔치국수",
+    "choices": [
+        "유부잔치국수",
+        "제육볶음",
+        "햄버거",
+        "다이제 과자"
+    ],
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

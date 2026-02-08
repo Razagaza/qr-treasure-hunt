@@ -1,0 +1,17 @@
+{
+    "id": 24,
+    "question": "안암역 1번출구 앞에는 미래약국이 있다",
+    "type": "choice",
+    "answer": "O",
+    "choices": [
+        "O",
+        "X"
+    ],
+    "points": 1,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 7,
+    "active": true
+}

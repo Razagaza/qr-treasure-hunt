@@ -1,0 +1,13 @@
+{
+    "id": 10,
+    "question": "진행자 3이 MT 가려는 첫날 아침에 알람을 몇시에 해놓았을까요?",
+    "type": "text",
+    "answer": "6시 30분",
+    "points": 2,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 0,
+    "active": true
+}

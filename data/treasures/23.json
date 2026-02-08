@@ -1,0 +1,17 @@
+{
+    "id": 23,
+    "question": "신공학관 732호는 실험실이다",
+    "type": "choice",
+    "answer": "X",
+    "choices": [
+        "O",
+        "X"
+    ],
+    "points": 1,
+    "hints": [
+        "",
+        ""
+    ],
+    "timeLimit": 7,
+    "active": true
+}

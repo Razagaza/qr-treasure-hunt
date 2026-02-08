@@ -4,10 +4,6 @@ import { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Plus, Trash2, Download, QrCode as QrIcon, Loader2 } from 'lucide-react';
 
-// We need to duplicate the type here or import from a shared location if possible
-// For client side, we can't import server-only functions like `getTreasures` directly from file-db
-// So we need an API route for admin to fetch treasures.
-
 interface Treasure {
   id: number;
   question: string;
@@ -25,21 +21,7 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [editingTreasure, setEditingTreasure] = useState<Treasure | null>(null);
 
-  // We are not implementing "Add" right now as per user request ("admin najeong-e").
-  // But we MUST show the existing seeded treasures so they can print QRs.
-
   useEffect(() => {
-    fetch('/api/seed') // Re-trigger seed if needed, or just fetch. 
-    // Actually we need a generic GET treasures route or just reuse the stats one?
-    // Stats one is group specific.
-    // Let's make a quick local fetch if we can, or just use the seed response if it returned data?
-    // Better: Helper API for admin.
-
-    // For now, let's just cheat and fetch the treasures via a new simple route
-    // OR, just assume 0-29 and generate clientside? 
-    // NO, we need the server-side encryption key. 
-    // So we MUST have an API that returns { id, encryptedQr }.
-
     fetchTreasures();
   }, []);
 
@@ -74,32 +56,26 @@ export default function AdminPage() {
       downloadLink.href = pngFile;
       downloadLink.click();
     };
-    img.src = "data:image/svg+xml;base64," + btoa(svgData);
+    // Base64 encode using a safe method for unicode
+    const base64 = btoa(unescape(encodeURIComponent(svgData)));
+    img.src = "data:image/svg+xml;base64," + base64;
   };
 
-  if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin" /></div>;
+  if (loading) return <div className="flex-center p-8"><Loader2 className="animate-spin" color="#6366f1" size={48} /></div>;
 
   return (
     <div className="admin-container">
-      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header className="header">
         <div>
           <h1>Admin Portal</h1>
-          <p style={{ opacity: 0.7 }}>Generate QR codes for treasures 0-29</p>
+          <p className="subtitle">Generate QR codes for treasures 0-29</p>
         </div>
         <button
+          className="reset-btn"
           onClick={async () => {
             if (!confirm('Are you sure you want to RESET ALL GAME DATA? This cannot be undone.')) return;
             await fetch('/api/admin/reset', { method: 'POST' });
             alert('Game Reset!');
-          }}
-          style={{
-            background: '#ef4444',
-            color: 'white',
-            padding: '0.5rem 1rem',
-            borderRadius: '0.5rem',
-            border: 'none',
-            cursor: 'pointer',
-            fontWeight: 'bold'
           }}
         >
           RESET GAME
@@ -107,25 +83,25 @@ export default function AdminPage() {
       </header>
 
       <section>
-        <h2 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Existing Treasures</h2>
-        <div style={{ display: 'grid', gap: '1rem' }}>
-          {treasures.length === 0 && <p style={{ opacity: 0.5 }}>No treasures found. Run seed!</p>}
+        <h2 className="section-title">Existing Treasures</h2>
+        <div className="treasure-list">
+          {treasures.length === 0 && <p className="empty-text">No treasures found. Run seed!</p>}
           {treasures.map((t) => (
-            <div key={t.id} className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1rem' }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Treasure #{t.id}</h3>
-                <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.6 }}>{t.points} Points</p>
-                <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.5 }}>{t.question}</p>
-                <div style={{ fontSize: '0.75rem', opacity: 0.4, marginTop: '0.25rem' }}>A: {t.answer}</div>
+            <div key={t.id} className="card treasure-card">
+              <div className="treasure-info">
+                <h3 className="treasure-title">Treasure #{t.id}</h3>
+                <p className="treasure-subtitle">{t.points} Points</p>
+                <p className="treasure-question">{t.question}</p>
+                <div className="treasure-answer">A: {t.answer}</div>
               </div>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div className="action-group">
                 <button
                   onClick={() => setEditingTreasure(t)}
-                  style={{ background: '#3b82f6', color: 'white', padding: '0.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}
+                  className="edit-btn"
                 >
                   Edit
                 </button>
-                <div style={{ padding: '0.5rem', background: 'white', borderRadius: '0.5rem', display: 'flex' }}>
+                <div className="qr-wrapper">
                   {t.encryptedQr && (
                     <QRCodeSVG
                       id={`qr-${t.id}`}
@@ -138,8 +114,7 @@ export default function AdminPage() {
                 </div>
                 <button
                   onClick={() => downloadQR(t.id)}
-                  className="flex items-center justify-center"
-                  style={{ background: 'rgba(255,255,255,0.1)', color: 'white', padding: '0.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer' }}
+                  className="icon-btn"
                   title="Download QR"
                 >
                   <Download size={18} />
@@ -152,12 +127,9 @@ export default function AdminPage() {
 
       {/* Edit Modal */}
       {editingTreasure && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 50,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
-        }}>
-          <div style={{ background: '#1e293b', padding: '1.5rem', borderRadius: '12px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Edit Treasure #{editingTreasure.id}</h3>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3 className="modal-title">Edit Treasure #{editingTreasure.id}</h3>
             <form onSubmit={async (e) => {
               e.preventDefault();
               if (!editingTreasure) return;
@@ -176,55 +148,51 @@ export default function AdminPage() {
                 alert('Failed to update');
               }
             }}>
-              <div style={{ display: 'grid', gap: '1rem' }}>
+              <div className="form-grid">
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Question</label>
+                  <label>Question</label>
                   <input
                     className="input-field"
                     value={editingTreasure.question}
                     onChange={e => setEditingTreasure({ ...editingTreasure, question: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Answer (Exact Match)</label>
+                  <label>Answer (Exact Match)</label>
                   <input
                     className="input-field"
                     value={editingTreasure.answer}
                     onChange={e => setEditingTreasure({ ...editingTreasure, answer: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
                   />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="two-col">
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Points</label>
+                    <label>Points</label>
                     <input
                       type="number"
                       className="input-field"
                       value={editingTreasure.points}
                       onChange={e => setEditingTreasure({ ...editingTreasure, points: Number(e.target.value) })}
-                      style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
                     />
                   </div>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Time Limit (Seconds)</label>
+                    <label>Time Limit (Seconds)</label>
                     <input
                       type="number"
                       className="input-field"
                       value={editingTreasure.timeLimit || ''}
                       onChange={e => setEditingTreasure({ ...editingTreasure, timeLimit: e.target.value ? Number(e.target.value) : undefined })}
                       placeholder="None"
-                      style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Input Type</label>
+                  <label>Input Type</label>
                   <select
+                    className="input-field"
                     value={editingTreasure.type}
                     onChange={e => setEditingTreasure({ ...editingTreasure, type: e.target.value as 'text' | 'choice' })}
-                    style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
                   >
                     <option value="text">Text Input</option>
                     <option value="choice">Multiple Choice</option>
@@ -233,27 +201,26 @@ export default function AdminPage() {
 
                 {editingTreasure.type === 'choice' && (
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Choices (Comma separated)</label>
+                    <label>Choices (Comma separated)</label>
                     <input
                       className="input-field"
                       value={editingTreasure.choices?.join(',') || ''}
                       onChange={e => setEditingTreasure({ ...editingTreasure, choices: e.target.value.split(',') })}
-                      style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
                     />
                   </div>
                 )}
 
-                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                <div className="modal-actions">
                   <button
                     type="button"
                     onClick={() => setEditingTreasure(null)}
-                    style={{ flex: 1, padding: '0.75rem', background: '#334155', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+                    className="cancel-btn"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    style={{ flex: 1, padding: '0.75rem', background: '#3b82f6', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+                    className="save-btn"
                   >
                     Save Changes
                   </button>
@@ -264,28 +231,19 @@ export default function AdminPage() {
         </div>
       )}
 
-      <style jsx>{`
-        .admin-container {
-          max-width: 600px;
-          margin: 0 auto;
-          padding: 1rem;
-        }
-        .animate-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
-      <section style={{ marginTop: '3rem', padding: '1.5rem', background: '#222', borderRadius: '12px' }}>
+      <section className="test-zone">
         <h2>🛠 Test Zone</h2>
-        <p style={{ opacity: 0.7, marginBottom: '1rem' }}>Scan this QR code to test the game flow (Treasure ID: 0)</p>
+        <p className="subtitle">Scan this QR code to test the game flow (Treasure ID: 0)</p>
 
         {treasures.find(t => t.id === 0)?.encryptedQr ? (
           <>
-            <div style={{ background: 'white', padding: '1rem', display: 'inline-block', borderRadius: '8px' }}>
+            <div className="qr-large">
               <QRCodeSVG
                 value={treasures.find(t => t.id === 0)!.encryptedQr!}
                 size={200}
               />
             </div>
-            <p style={{ fontSize: '0.8rem', marginTop: '0.5rem', fontFamily: 'monospace', color: '#888' }}>
+            <p className="raw-qr">
               Raw: {treasures.find(t => t.id === 0)!.encryptedQr!.substring(0, 10)}...
             </p>
           </>
@@ -293,6 +251,167 @@ export default function AdminPage() {
           <p style={{ color: 'orange' }}>Loading or Treasure 0 not found...</p>
         )}
       </section>
+
+      <style jsx>{`
+        .admin-container {
+          max-width: 800px;
+          margin: 0 auto;
+          padding: 1.5rem;
+          color: white;
+          min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        h1 { margin: 0; font-size: 2rem; font-weight: bold; }
+        .subtitle { opacity: 0.7; margin: 0.5rem 0 0 0; }
+
+        .reset-btn {
+            background: #ef4444;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .section-title { font-size: 1.25rem; margin-bottom: 1rem; }
+        .treasure-list { display: grid; gap: 1rem; }
+        .empty-text { opacity: 0.5; }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 0.75rem;
+            padding: 1rem;
+        }
+        
+        .treasure-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .treasure-info { flex: 1; min-width: 200px; }
+        .treasure-title { margin: 0; font-size: 1.1rem; font-weight: bold; }
+        .treasure-subtitle { margin: 0; font-size: 0.875rem; opacity: 0.6; }
+        .treasure-question { margin: 0.5rem 0 0 0; font-size: 0.9rem; opacity: 0.9; }
+        .treasure-answer { font-size: 0.75rem; opacity: 0.4; margin-top: 0.25rem; }
+
+        .action-group { display: flex; align-items: center; gap: 0.5rem; }
+        .edit-btn {
+            background: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+        .qr-wrapper {
+            padding: 0.5rem;
+            background: white;
+            border-radius: 0.5rem;
+            display: flex;
+        }
+        .icon-btn {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-content {
+            background: #1e293b;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-title { font-size: 1.25rem; margin-bottom: 1rem; margin-top: 0; }
+        
+        .form-grid { display: grid; gap: 1rem; }
+        label { display: block; font-size: 0.875rem; margin-bottom: 0.5rem; opacity: 0.8; }
+        .input-field {
+            width: 100%;
+            padding: 0.75rem;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            color: white;
+            font-size: 1rem;
+        }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        
+        .modal-actions { display: flex; gap: 1rem; margin-top: 1rem; }
+        .cancel-btn {
+            flex: 1;
+            padding: 0.75rem;
+            background: #334155;
+            color: white;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+        }
+        .save-btn {
+            flex: 1;
+            padding: 0.75rem;
+            background: #3b82f6;
+            color: white;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Test Zone */
+        .test-zone {
+            margin-top: 3rem;
+            padding: 1.5rem;
+            background: #222;
+            border-radius: 12px;
+        }
+        .qr-large {
+            background: white;
+            padding: 1rem;
+            display: inline-block;
+            border-radius: 8px;
+        }
+        .raw-qr {
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+            font-family: monospace;
+            color: #888;
+        }
+
+        .flex-center { display: flex; align-items: center; justify-content: center; height: 100vh; }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   );
 }

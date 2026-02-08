@@ -143,10 +143,6 @@ export default function ScanPage() {
     // Disable multiple submits
     if (status === 'submitting') return;
 
-    // Prevent submitting empty unless it's a timeout force-submit? 
-    // User said: "제출은 입력칸에 뭐가 있어야만 버튼이 활성화" -> Implies manual submit needs input. 
-    // But auto-submit might send empty. Let's allow empty for auto-submit case.
-
     setStatus('submitting');
 
     try {
@@ -166,14 +162,6 @@ export default function ScanPage() {
         setMessage(data.message);
         setHints(data.hints || []);
       } else {
-        // If wrong answer, user might want to try again? 
-        // Or "보물을 못 찾은 거로 할거야"? 
-        // User said: "보물을 제출하지 않고 닫기 할 수도 있는데 이 경우에는 보물을 못 찾은 거로 할거야."
-        // If submitted and wrong -> likely should show "Wrong" and maybe allow retry or fail?
-        // Let's assume standard quiz: Wrong = Error state, or just Feedback.
-        // For now, let's treat as Error state allow retry if timer permits? 
-        // User didn't specify retry logic explicitly, but "hint is revealed" only on success.
-
         setStatus('error');
         setMessage(data.message || 'Incorrect Answer');
       }
@@ -197,38 +185,21 @@ export default function ScanPage() {
   return (
     <div className="scan-container">
       {/* Header with Back Button */}
-      <div style={{
-        position: 'absolute',
-        top: '1rem',
-        left: '1rem',
-        zIndex: 20
-      }}>
+      <div className="back-button-wrapper">
         <button
           onClick={() => router.push('/dashboard')}
-          style={{
-            background: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'blur(4px)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            borderRadius: '50%',
-            width: '40px',
-            height: '40px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            cursor: 'pointer'
-          }}
+          className="back-btn"
         >
           <ArrowLeft size={20} />
         </button>
       </div>
-      <div id="reader" style={{ display: status === 'scanning' ? 'block' : 'none' }}></div>
+      <div id="reader" style={{ display: status === 'scanning' ? 'block' : 'none', marginTop: '3rem' }}></div>
 
       {/* Loading / Validating */}
       {(status === 'validating' || status === 'submitting') && (
         <div className="fullscreen-overlay flex-center flex-col">
-          <Loader2 className="animate-spin" size={48} />
-          <p>{status === 'validating' ? 'Verifying QR...' : 'Checking Answer...'}</p>
+          <Loader2 className="animate-spin" size={48} color="#6366f1" />
+          <p className="loading-text">{status === 'validating' ? 'Verifying QR...' : 'Checking Answer...'}</p>
         </div>
       )}
 
@@ -236,9 +207,9 @@ export default function ScanPage() {
       {status === 'error' && (
         <div className="card flex-center flex-col p-8 gap-4 text-center">
           <AlertCircle size={64} color="#ef4444" />
-          <h2 className="text-red-500">Oops!</h2>
-          <p>{message}</p>
-          <button className="btn-primary bg-slate-600" onClick={handleClose}>Close</button>
+          <h2 className="title text-red">Oops!</h2>
+          <p className="message">{message}</p>
+          <button className="btn-primary" onClick={handleClose}>Close</button>
         </div>
       )}
 
@@ -246,11 +217,11 @@ export default function ScanPage() {
       {status === 'success' && (
         <div className="card flex-center flex-col p-8 gap-4 text-center">
           <CheckCircle2 size={64} color="#10b981" />
-          <h2 className="text-emerald-500">Correct!</h2>
-          <div className="bg-slate-800 p-4 rounded-lg w-full">
-            <h3 className="text-sm opacity-70 mb-2">Unlocked Hints:</h3>
+          <h2 className="title text-green">Correct!</h2>
+          <div className="hints-box">
+            <h3 className="hints-title">Unlocked Hints:</h3>
             {hints.map((h, i) => (
-              <p key={i} className="text-yellow-400 mb-1">💡 {h}</p>
+              <p key={i} className="hint-item">💡 {h}</p>
             ))}
           </div>
           <button className="btn-primary" onClick={handleClose}>Scan Next</button>
@@ -259,28 +230,25 @@ export default function ScanPage() {
 
       {/* Solving Interface */}
       {status === 'solving' && treasure && (
-        <div className="card p-6 flex flex-col gap-6">
-          <div className="flex justify-between items-center">
-            <span className="text-xs opacity-50">Treasure #{treasure.id}</span>
+        <div className="card content-card">
+          <div className="card-header">
+            <span className="treasure-id">Treasure #{treasure.id}</span>
             {timeLeft !== null && (
-              <div className={`flex items-center gap-2 font-mono ${timeLeft < 10 ? 'text-red-500' : 'text-primary'}`}>
+              <div className={`timer ${timeLeft < 10 ? 'timer-critical' : ''}`}>
                 <Timer size={16} />
                 {timeLeft}s
               </div>
             )}
           </div>
 
-          <h2 className="text-xl font-bold">{treasure.question}</h2>
+          <h2 className="question-text">{treasure.question}</h2>
 
           {treasure.type === 'choice' && treasure.choices ? (
-            <div className="flex flex-col gap-2">
+            <div className="choices-list">
               {treasure.choices.map((choice) => (
                 <button
                   key={choice}
-                  className={`p-3 rounded border text-left transition-colors ${answer === choice
-                    ? 'bg-primary border-primary text-black'
-                    : 'bg-transparent border-slate-700 hover:bg-slate-800'
-                    }`}
+                  className={`choice-btn ${answer === choice ? 'selected' : ''}`}
                   onClick={() => setAnswer(choice)}
                 >
                   {choice}
@@ -289,26 +257,26 @@ export default function ScanPage() {
             </div>
           ) : (
             <input
-              type="text" // User said "Numbers mostly" but text is flexible
-              className="p-3 bg-slate-900 border border-slate-700 rounded w-full"
+              type="text"
+              className="text-input"
               placeholder="Enter your answer..."
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
             />
           )}
 
-          <div className="flex gap-3 mt-4">
+          <div className="action-buttons">
             <button
-              className="btn-primary flex-1 bg-slate-700 disabled:opacity-50"
+              className="btn-secondary"
               onClick={handleClose}
-              disabled={isTimerActive} // "보물 중에 시간 제한이 있는 거는 닫기 버튼이 활성화되지 않고"
+              disabled={isTimerActive}
             >
               Close
             </button>
             <button
-              className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary"
               onClick={handleSubmit}
-              disabled={!isInputValid} // "입력칸에 뭐가 있어야만 버튼이 활성화"
+              disabled={!isInputValid}
             >
               Submit
             </button>
@@ -322,7 +290,29 @@ export default function ScanPage() {
              margin: 0 auto;
              padding: 1rem;
              min-height: 80vh;
+             color: white;
+             position: relative;
          }
+         .back-button-wrapper {
+             position: absolute;
+             top: 1rem;
+             left: 1rem;
+             z-index: 20;
+         }
+         .back-btn {
+             background: rgba(0,0,0,0.6);
+             backdrop-filter: blur(4px);
+             border: 1px solid rgba(255,255,255,0.2);
+             border-radius: 50%;
+             width: 40px;
+             height: 40px;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             color: white;
+             cursor: pointer;
+         }
+
          .fullscreen-overlay {
              position: fixed;
              inset: 0;
@@ -337,8 +327,121 @@ export default function ScanPage() {
          .flex-col {
              flex-direction: column;
          }
-         .p-8 { padding: 2rem; }
          .gap-4 { gap: 1rem; }
+         .p-8 { padding: 2rem; }
+         .text-center { text-align: center; }
+
+         .loading-text {
+             margin-top: 1rem;
+             font-size: 1.1rem;
+             color: #e2e8f0;
+         }
+         
+         .card {
+             background: #1e293b;
+             border-radius: 1rem;
+             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+             border: 1px solid #334155;
+         }
+         .content-card {
+             padding: 1.5rem;
+             display: flex;
+             flex-direction: column;
+             gap: 1.5rem;
+             margin-top: 2rem;
+         }
+
+         .title { font-size: 1.5rem; font-weight: bold; margin: 0; }
+         .text-red { color: #ef4444; }
+         .text-green { color: #10b981; }
+         .message { color: #cbd5e1; }
+
+         .hints-box {
+             background: #0f172a;
+             padding: 1rem;
+             border-radius: 0.5rem;
+             width: 100%;
+             text-align: left;
+         }
+         .hints-title { font-size: 0.875rem; opacity: 0.7; margin-bottom: 0.5rem; }
+         .hint-item { color: #facc15; margin-bottom: 0.25rem; }
+
+         .card-header {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+         }
+         .treasure-id { font-size: 0.75rem; opacity: 0.5; text-transform: uppercase; letter-spacing: 0.05em; }
+         .timer {
+             display: flex;
+             align-items: center;
+             gap: 0.5rem;
+             font-family: monospace;
+             color: #6366f1;
+             font-weight: bold;
+         }
+         .timer-critical { color: #ef4444; }
+
+         .question-text { font-size: 1.25rem; font-weight: bold; line-height: 1.4; margin: 0; }
+
+         .choices-list { display: flex; flex-direction: column; gap: 0.5rem; }
+         .choice-btn {
+             padding: 0.75rem;
+             border-radius: 0.5rem;
+             border: 1px solid #334155;
+             background: transparent;
+             color: white;
+             text-align: left;
+             cursor: pointer;
+             transition: all 0.2s;
+         }
+         .choice-btn:hover { background: #334155; }
+         .choice-btn.selected {
+             background: #6366f1;
+             border-color: #6366f1;
+             color: white;
+         }
+
+         .text-input {
+             padding: 0.75rem;
+             background: #0f172a;
+             border: 1px solid #334155;
+             border-radius: 0.5rem;
+             width: 100%;
+             color: white;
+             font-size: 1rem;
+         }
+         .text-input:focus { outline: none; border-color: #6366f1; }
+
+         .action-buttons { display: flex; gap: 0.75rem; margin-top: 1rem; }
+         .btn-primary {
+             background: #6366f1;
+             color: white;
+             padding: 0.75rem 1.5rem;
+             border-radius: 0.5rem;
+             border: none;
+             font-weight: 600;
+             cursor: pointer;
+             flex: 1;
+             transition: opacity 0.2s;
+         }
+         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+         .btn-primary:active { transform: translateY(1px); }
+
+         .btn-secondary {
+             background: #334155;
+             color: white;
+             padding: 0.75rem 1.5rem;
+             border-radius: 0.5rem;
+             border: none;
+             font-weight: 600;
+             cursor: pointer;
+             flex: 1;
+         }
+         .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+         .animate-spin { animation: spin 1s linear infinite; }
+         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
        `}</style>
     </div>
   );

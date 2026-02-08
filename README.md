@@ -66,3 +66,10 @@ If you see this error on the Dashboard:
 -   **Database**: JSON Files (in `/data`) + In-Memory Fallback
 -   **Auth**: Cookies
 -   **Scanning**: html5-qrcode
+
+### Data Logic
+-   **QR Mapping**: `getTreasureIdByQr` reads from `data/qr_codes.json`. This file is **created** during the seeding process (`saveQrCodeMapping`), not during the lookup.
+-   **Storage**:
+    -   `data/groups/*.json`: Stores group progress and members.
+    -   `data/treasures/*.json`: Stores treasure data.
+    -   `data/qr_codes.json`: Maps encrypted strings to IDs.

@@ -14,6 +14,7 @@ interface FoundTreasure {
 
 interface DashboardData {
   group: string;
+  username?: string; // Added username
   score: number;
   foundTreasures: FoundTreasure[];
 }
@@ -53,8 +54,8 @@ export default function Dashboard() {
     <div className="dashboard-container">
       <header className="flex items-center justify-between mb-6">
         <div>
+          <p className="text-xs opacity-50 mb-1">Hello, <span className="text-primary font-bold">{data.username || 'Hunter'}</span></p>
           <h1 className="text-2xl font-bold">Team {data.group}</h1>
-          <p className="opacity-70">Dashboard</p>
         </div>
         <div className="text-right">
           <div className="flex items-center gap-2 text-yellow-400">

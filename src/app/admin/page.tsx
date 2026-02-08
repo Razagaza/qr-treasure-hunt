@@ -11,14 +11,19 @@ import { Plus, Trash2, Download, QrCode as QrIcon, Loader2 } from 'lucide-react'
 interface Treasure {
   id: number;
   question: string;
+  answer: string;
   points: number;
-  // We compute the encrypted string on the server and send it here
+  type: 'text' | 'choice';
+  choices?: string[];
+  timeLimit?: number;
+  hints?: string[];
   encryptedQr?: string;
 }
 
 export default function AdminPage() {
   const [treasures, setTreasures] = useState<Treasure[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingTreasure, setEditingTreasure] = useState<Treasure | null>(null);
 
   // We are not implementing "Add" right now as per user request ("admin najeong-e").
   // But we MUST show the existing seeded treasures so they can print QRs.
@@ -111,8 +116,15 @@ export default function AdminPage() {
                 <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Treasure #{t.id}</h3>
                 <p style={{ margin: 0, fontSize: '0.875rem', opacity: 0.6 }}>{t.points} Points</p>
                 <p style={{ margin: 0, fontSize: '0.8rem', opacity: 0.5 }}>{t.question}</p>
+                <div style={{ fontSize: '0.75rem', opacity: 0.4, marginTop: '0.25rem' }}>A: {t.answer}</div>
               </div>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => setEditingTreasure(t)}
+                  style={{ background: '#3b82f6', color: 'white', padding: '0.5rem', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', fontSize: '0.8rem' }}
+                >
+                  Edit
+                </button>
                 <div style={{ padding: '0.5rem', background: 'white', borderRadius: '0.5rem', display: 'flex' }}>
                   {t.encryptedQr && (
                     <QRCodeSVG
@@ -137,6 +149,120 @@ export default function AdminPage() {
           ))}
         </div>
       </section>
+
+      {/* Edit Modal */}
+      {editingTreasure && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 50,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
+        }}>
+          <div style={{ background: '#1e293b', padding: '1.5rem', borderRadius: '12px', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem' }}>Edit Treasure #{editingTreasure.id}</h3>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              if (!editingTreasure) return;
+
+              const res = await fetch('/api/admin/treasures/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editingTreasure)
+              });
+
+              if (res.ok) {
+                alert('Updated!');
+                setEditingTreasure(null);
+                fetchTreasures(); // Refresh list
+              } else {
+                alert('Failed to update');
+              }
+            }}>
+              <div style={{ display: 'grid', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Question</label>
+                  <input
+                    className="input-field"
+                    value={editingTreasure.question}
+                    onChange={e => setEditingTreasure({ ...editingTreasure, question: e.target.value })}
+                    style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Answer (Exact Match)</label>
+                  <input
+                    className="input-field"
+                    value={editingTreasure.answer}
+                    onChange={e => setEditingTreasure({ ...editingTreasure, answer: e.target.value })}
+                    style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Points</label>
+                    <input
+                      type="number"
+                      className="input-field"
+                      value={editingTreasure.points}
+                      onChange={e => setEditingTreasure({ ...editingTreasure, points: Number(e.target.value) })}
+                      style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Time Limit (Seconds)</label>
+                    <input
+                      type="number"
+                      className="input-field"
+                      value={editingTreasure.timeLimit || ''}
+                      onChange={e => setEditingTreasure({ ...editingTreasure, timeLimit: e.target.value ? Number(e.target.value) : undefined })}
+                      placeholder="None"
+                      style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Input Type</label>
+                  <select
+                    value={editingTreasure.type}
+                    onChange={e => setEditingTreasure({ ...editingTreasure, type: e.target.value as 'text' | 'choice' })}
+                    style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
+                  >
+                    <option value="text">Text Input</option>
+                    <option value="choice">Multiple Choice</option>
+                  </select>
+                </div>
+
+                {editingTreasure.type === 'choice' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Choices (Comma separated)</label>
+                    <input
+                      className="input-field"
+                      value={editingTreasure.choices?.join(',') || ''}
+                      onChange={e => setEditingTreasure({ ...editingTreasure, choices: e.target.value.split(',') })}
+                      style={{ width: '100%', padding: '0.5rem', background: '#0f172a', border: '1px solid #334155', borderRadius: '4px', color: 'white' }}
+                    />
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditingTreasure(null)}
+                    style={{ flex: 1, padding: '0.75rem', background: '#334155', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    style={{ flex: 1, padding: '0.75rem', background: '#3b82f6', color: 'white', borderRadius: '6px', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .admin-container {

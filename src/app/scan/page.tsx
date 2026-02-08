@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, ChangeEvent } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useRouter } from 'next/navigation';
-import { Loader2, CheckCircle2, AlertCircle, ArrowLeft, Timer } from 'lucide-react';
+import { Loader2, CheckCircle2, AlertCircle, ArrowLeft, Timer, X } from 'lucide-react';
 import Link from 'next/link';
 
 type ScanStatus = 'idle' | 'scanning' | 'validating' | 'solving' | 'submitting' | 'success' | 'error' | 'inactive';
@@ -106,7 +106,8 @@ export default function ScanPage() {
         if (data.treasure.timeLimit > 0) {
           setTimeLeft(data.treasure.timeLimit);
         } else {
-          setTimeLeft(0);
+          // Unlimited Time
+          setTimeLeft(null);
         }
 
         setStatus('solving');
@@ -275,6 +276,12 @@ export default function ScanPage() {
                 <Timer size={16} />
                 {timeLeft}s
               </div>
+            )}
+            {/* Show Close button in header if Unlimited Time (timeLeft is null) */}
+            {timeLeft === null && (
+              <button onClick={handleClose} className="p-1 rounded-full hover:bg-slate-700">
+                <X size={20} className="text-gray-400" />
+              </button>
             )}
           </div>
 

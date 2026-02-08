@@ -27,6 +27,9 @@ export default function ClientHome() {
     const handleStart = async () => {
         if (!username.trim()) return;
 
+        // Confirmation Check
+        if (!confirm(`Join Group ${group} as "${username}"?`)) return;
+
         try {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',

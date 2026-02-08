@@ -21,34 +21,33 @@ A group-based QR treasure hunt application where teams compete to find treasures
 -   Review unlocked hints.
 
 ### 4. Admin (`/admin`)
--   Generate and download the encrypted QR codes for the game.
+-   **Dashboard**: Live view of all groups (A, B, C, D) with real-time scores and progress.
+-   **Reset Game**: Wipes all progress for a fresh start.
+-   *Note*: QR code generation is done via seeding, not this UI anymore.
 
 ---
 
 ## 📖 How to Access & Play
 
 ### 1. Initial Setup (Admin)
-1.  Go to `/admin` (e.g., `https://your-site.com/admin`).
-2.  You will see a list of 30 Treasures (0-29).
-3.  Click the **Download** button to save the QR codes.
-4.  Print and hide them around the venue.
+1.  Go to `/api/admin/seed` to generate initial data if needed.
+2.  Use the Admin Dashboard (`/admin`) to monitor progress.
 
 ### 2. User User Flow
 1.  **Login**:
-    -   Open the home page (`/`).
-    -   Select your **Team** (A/B/C/D).
-    -   Enter your **Name**.
+    -   Select Team & Enter Name.
+    -   **Confirm** your choice before joining.
 2.  **Play**:
-    -   Click "Start" to go to the Dashboard.
-    -   Click the **Search Icon** (bottom center) to open the Scanner.
-    -   Scan a hidden QR code.
+    -   Scan QRs.
+    -   **Unlimited Time**: Some treasures have no time limit (Close button available).
+    -   **One Strike**: Wrong answers fail the treasure permanently!
 3.  **Solve**:
     -   Answer the question presented.
     -   If correct, you get points and a hint!
 
 ---
 
-## � Troubleshooting
+## 🔧 Troubleshooting
 
 ### "Failed to load data" or "No group selected"
 If you see this error on the Dashboard:

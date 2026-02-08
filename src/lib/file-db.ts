@@ -133,14 +133,19 @@ export async function saveGroupData(groupId: string, data: GroupData): Promise<v
 
 export async function updateGroupData(groupId: string, updateFn: (data: GroupData) => GroupData): Promise<GroupData | null> {
     return await getGroupLock(groupId).dispatch(async () => {
+        // 1. Read (Inside Lock)
         const currentData = await _getGroupDataInternal(groupId);
         if (!currentData) return null;
 
+        // 2. Modify (Inside Lock)
         const newData = updateFn(currentData);
+
+        // 3. Write (Inside Lock - Atomic with Read)
         await _saveGroupDataInternal(groupId, newData);
         return newData;
     });
 }
+
 
 // --- Treasure Operations ---
 

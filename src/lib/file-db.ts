@@ -51,12 +51,17 @@ class Mutex {
 
         this.mutex = this.mutex.then(() => {
             return new Promise<void>(resolve => {
-                begin = resolve;
+                begin = (unlock: () => void) => {
+                    resolve();
+                };
             });
         });
 
         return new Promise<() => void>(resolve => {
-            resolve(begin);
+            resolve(() => {
+                // This is the 'unlock' function passed to the caller
+                if (begin) begin(() => { });
+            });
         });
     }
 

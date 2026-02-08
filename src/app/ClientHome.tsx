@@ -31,7 +31,7 @@ export default function ClientHome() {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ group: selectedGroup, username })
+                body: JSON.stringify({ group, username })
             });
 
             if (res.ok) {

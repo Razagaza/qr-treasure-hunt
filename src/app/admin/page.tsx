@@ -129,7 +129,7 @@ export default function AdminPage() {
                   {t.encryptedQr && (
                     <QRCodeSVG
                       id={`qr-${t.id}`}
-                      value={t.encryptedQr}
+                      value={JSON.stringify({ id: t.encryptedQr, type: 'treasure' })}
                       size={64}
                       level="M"
                       includeMargin={false}

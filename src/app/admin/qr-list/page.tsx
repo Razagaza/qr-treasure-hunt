@@ -18,7 +18,7 @@ export default function QrListPage() {
                 <thead>
                     <tr style={{ background: '#333' }}>
                         <th style={{ padding: '0.5rem', textAlign: 'left' }}>ID</th>
-                        <th style={{ padding: '0.5rem', textAlign: 'left' }}>Encrypted String (Use for QR)</th>
+                        <th style={{ padding: '0.5rem', textAlign: 'left' }}>QR Data (JSON Format)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -26,7 +26,7 @@ export default function QrListPage() {
                         <tr key={t.id} style={{ borderBottom: '1px solid #333' }}>
                             <td style={{ padding: '0.5rem' }}>{t.id}</td>
                             <td style={{ padding: '0.5rem', fontFamily: 'monospace', fontSize: '0.9rem', wordBreak: 'break-all' }}>
-                                {t.encrypted}
+                                {JSON.stringify({ id: t.encrypted, type: 'treasure' })}
                             </td>
                         </tr>
                     ))}

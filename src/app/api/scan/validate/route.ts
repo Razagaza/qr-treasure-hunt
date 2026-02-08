@@ -16,9 +16,20 @@ export async function POST(request: Request) {
         const group = groupCookie.value;
         let baseId: number;
 
-        // 1. Decrypt QR
+        // 1. Decrypt QR (Handles both raw string and JSON wrapper)
+        let encryptedString = qrData;
         try {
-            const decrypted = decrypt(qrData);
+            // Try to parse as JSON first
+            const parsed = JSON.parse(qrData);
+            if (parsed.type === 'treasure' && parsed.id) {
+                encryptedString = parsed.id;
+            }
+        } catch (e) {
+            // Not JSON, assume raw string
+        }
+
+        try {
+            const decrypted = decrypt(encryptedString);
             baseId = parseInt(decrypted, 10);
             if (isNaN(baseId)) throw new Error('Invalid ID');
         } catch (e) {

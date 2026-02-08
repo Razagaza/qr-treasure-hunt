@@ -285,7 +285,12 @@ export default function ScanPage() {
             )}
           </div>
 
-          <h2 className="question-text">{treasure.question}</h2>
+          <h2 className="question-text">{treasure.question.split('\\n').map((line, i) => (
+            <span key={i}>
+              {line}
+              {i < treasure.question.split('\\n').length - 1 && <br />}
+            </span>
+          ))}</h2>
 
           {treasure.type === 'choice' && treasure.choices ? (
             <div className="choices-list">
@@ -427,7 +432,7 @@ export default function ScanPage() {
          }
          .timer-critical { color: #ef4444; }
 
-         .question-text { font-size: 1.25rem; font-weight: bold; line-height: 1.4; margin: 0; }
+         .question-text { font-size: 1.25rem; font-weight: bold; line-height: 1.4; margin: 0; white-space: pre-wrap; }
 
          .choices-list { display: flex; flex-direction: column; gap: 0.5rem; }
          .choice-btn {

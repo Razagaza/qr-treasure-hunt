@@ -18,6 +18,7 @@ interface Treasure {
 }
 
 export default function ScanPage() {
+  const router = useRouter();
   const [status, setStatus] = useState<ScanStatus>('idle');
   const [message, setMessage] = useState('');
   const [treasure, setTreasure] = useState<Treasure | null>(null);

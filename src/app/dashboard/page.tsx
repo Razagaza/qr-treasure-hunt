@@ -1,8 +1,9 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Trophy, Home, Search, Loader2 } from 'lucide-react';
+import { Trophy, Home, Search, Loader2, ScanLine } from 'lucide-react'; // Added ScanLine
 
 interface FoundTreasure {
   treasureId: number;
@@ -20,6 +21,7 @@ interface DashboardData {
 }
 
 export default function Dashboard() {
+  const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTreasure, setSelectedTreasure] = useState<FoundTreasure | null>(null);

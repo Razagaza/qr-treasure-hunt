@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         }
 
         // Validate Answer (Case insensitive)
-        const isCorrect = treasure.correctAnswer.trim().toLowerCase() === answer.trim().toLowerCase();
+        const isCorrect = treasure.answer.trim().toLowerCase() === answer.trim().toLowerCase();
 
         if (!isCorrect) {
             return NextResponse.json({ success: false, message: 'Incorrect answer' });

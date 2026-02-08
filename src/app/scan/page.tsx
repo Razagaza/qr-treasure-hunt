@@ -261,11 +261,6 @@ export default function ScanPage() {
               className="text-input"
               placeholder="Enter your answer..."
               value={answer}
-            <input
-              type="text"
-              className="text-input"
-              placeholder="Enter your answer..."
-              value={answer}
               onChange={(e: ChangeEvent<HTMLInputElement>) => setAnswer(e.target.value)}
             />
           )}

@@ -85,10 +85,6 @@ export default function Dashboard() {
           <h3 className="stat-value text-primary">{data.foundTreasures.length}</h3>
           <p className="stat-label">Treasures Found</p>
         </div>
-        <div className="card stat-card">
-          <h3 className="stat-value text-green">{30 - data.foundTreasures.length}</h3>
-          <p className="stat-label">Remaining</p>
-        </div>
       </div>
 
       <h2 className="section-title">

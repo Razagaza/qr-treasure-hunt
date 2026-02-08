@@ -259,7 +259,7 @@ export default function ScanPage() {
           <div className="hints-box">
             <h3 className="hints-title">Unlocked Hints:</h3>
             {hints.map((h: string, i: number) => (
-              <p key={i} className="hint-item">💡 {h}</p>
+              <p key={i} className="hint-item">{h}</p>
             ))}
           </div>
           <button className="btn-primary" onClick={handleClose}>Scan Next</button>
@@ -302,7 +302,7 @@ export default function ScanPage() {
           ) : (
             <input
               type={treasure.type === 'number' ? 'text' : 'text'}
-              inputMode={treasure.type === 'number' ? 'decimal' : 'text'}
+              inputMode="decimal"
               className="text-input"
               placeholder={treasure.type === 'number' ? 'Enter number...' : 'Enter your answer...'}
               value={answer}

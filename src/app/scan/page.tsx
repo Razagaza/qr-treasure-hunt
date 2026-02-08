@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, CheckCircle2, AlertCircle, ArrowLeft, Timer } from 'lucide-react';
 import Link from 'next/link';
 
-type ScanStatus = 'idle' | 'scanning' | 'validating' | 'solving' | 'submitting' | 'success' | 'error'
-'inactive';
+type ScanStatus = 'idle' | 'scanning' | 'validating' | 'solving' | 'submitting' | 'success' | 'error' | 'inactive';
 
 interface Treasure {
   id: number;

@@ -79,13 +79,7 @@ export async function POST(request: Request) {
             });
         }
 
-        // 4. Get Treasure Data
-        const treasure = await db.getTreasure(targetId);
-        if (!treasure) {
-            console.log('Error: Treasure data missing for ID', targetId);
-            return NextResponse.json({ success: false, message: 'Treasure data not found. Contact Admin.' }, { status: 404 });
-        }
-
+        // 4. Return Treasure Data (already fetched in step 2.5)
         console.log('Success: Return treasure data');
         console.log('--- [Validate API] Check End ---');
 

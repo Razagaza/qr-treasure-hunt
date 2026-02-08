@@ -14,6 +14,7 @@ interface Treasure {
   timeLimit?: number;
   hints?: string[];
   encryptedQr?: string;
+  active?: boolean;
 }
 
 export default function AdminPage() {

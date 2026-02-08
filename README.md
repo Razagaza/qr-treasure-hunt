@@ -1,67 +1,68 @@
-# QR 보물찾기 (QR Treasure Hunt)
+# QR Treasure Hunt (Group Edition)
 
-오프라인 공간에 배치된 QR 코드를 스캔하여 디지털 스탬프와 포인트를 수집하는 웹 애플리케이션입니다.
+A group-based QR treasure hunt application where teams compete to find treasures by scanning encrypted QR codes.
 
-*참고: 이 버전은 `localStorage`를 사용하여 데이터를 저장합니다. 별도의 백엔드 서버나 데이터베이스가 필요 없습니다.*
+## 🚀 Features
 
-## 🚀 주요 기능
+### 1. Group Access (`/`)
+-   **Teams**: Join Team A, B, C, or D.
+-   **Identity**: Enter your name to identify yourself within the team.
+-   **Persistence**: Uses Cookies to keep you logged in.
 
-### 1. QR 스캐너 (`/scan`)
-- 모바일 카메라(후면 카메라 기본)를 이용한 실시간 QR 인식
-- **무상태(Stateless) 검증**: QR 코드 자체에 모든 보물 정보(이름, 점수, 설명)가 담겨 있어, DB 동기화 없이 어떤 기기에서든 즉시 인식 가능합니다.
-- 중복 획득 방지 및 성공 시 축하 애니메이션 제공
+### 2. QR Scanning (`/scan`)
+-   **Encrypted QRs**: Codes are encrypted to prevent cheating.
+-   **Smart Mapping**: The *same* QR code gives *different* treasures to different groups (Offset Logic).
+-   **Interactive Solving**: Scan -> Answer Question -> Get Points & Hints.
+-   **Timer**: Some treasures have a time limit!
 
-### 2. 관리자 포털 (`/admin`)
-- **접속 방법**: 브라우저 주소창에 `/admin`을 직접 입력하여 접속 (UI 메뉴에는 숨겨져 있음)
-- 새로운 보물 생성 및 관리 (이름, 점수, 설명 입력)
-- QR 코드 즉시 생성 및 이미지 다운로드
-- **주의**: 이곳에서 생성된 정보는 관리자 기기에만 저장되지만, 생성된 QR 코드는 모든 정보를 담고 있으므로 다른 사용자가 스캔하는 데 문제 없습니다.
+### 3. Dashboard (`/dashboard`)
+-   View Team Score and Username.
+-   See list of found treasures.
+-   Review unlocked hints.
 
-### 3. 유저 대시보드 (`/dashboard`)
-- 현재까지 획득한 총 포인트 및 스탬프 개수 확인
-- 수집한 보물 목록 시각화
+### 4. Admin (`/admin`)
+-   Generate and download the encrypted QR codes for the game.
 
-## 🛠 기술 스택
+---
 
-- **Frontend**: Next.js 15 (App Router), Vanilla CSS
-- **Storage**: Browser LocalStorage (No Backend)
-- **Scanning**: html5-qrcode (커스텀 UI)
-- **Generation**: qrcode.react
+## 📖 How to Access & Play
 
-## 📱 QR 코드 포맷
+### 1. Initial Setup (Admin)
+1.  Go to `/admin` (e.g., `https://your-site.com/admin`).
+2.  You will see a list of 30 Treasures (0-29).
+3.  Click the **Download** button to save the QR codes.
+4.  Print and hide them around the venue.
 
-이 앱에서 사용하는 QR 코드는 보물의 모든 상세 정보를 담은 JSON 객체입니다. 이를 통해 별도의 서버 통신 없이 즉각적인 검증이 가능합니다.
+### 2. User User Flow
+1.  **Login**:
+    -   Open the home page (`/`).
+    -   Select your **Team** (A/B/C/D).
+    -   Enter your **Name**.
+2.  **Play**:
+    -   Click "Start" to go to the Dashboard.
+    -   Click the **Search Icon** (bottom center) to open the Scanner.
+    -   Scan a hidden QR code.
+3.  **Solve**:
+    -   Answer the question presented.
+    -   If correct, you get points and a hint!
 
-- **형식**: JSON 문자열
-- **구조 예시**:
-  ```json
-  {
-    "id": "uuid-v4-string",
-    "name": "숨겨진 소파",
-    "points": 50,
-    "desc": "소파 밑에서 보물을 찾았습니다!"
-  }
-  ```
+---
 
-## 📦 시작하기
+## � Troubleshooting
 
-### 1. 의존성 설치
-```bash
-npm install
-```
+### "Failed to load data" or "No group selected"
+If you see this error on the Dashboard:
 
-### 2. 로컬 실행
-```bash
-npm run dev
-```
+1.  **Cookies are disabled**: Ensure your browser allows cookies. The app uses `treasure-group` and `treasure-username` cookies.
+2.  **Deployment Issue (Vercel/Netlify)**:
+    -   This app uses **File-Based Storage** (`data/` folder).
+    -   On serverless platforms like Vercel, the filesystem is **Read-Only** and **Ephemeral** (resets on redeploy).
+    -   **Solution**: This app is best run on a **VPS** (DigitalOcean, AWS EC2) or locally (`localhost`) for persistent data.
+    -   *However*, I have added a "Memory Fallback" mode. If the file cannot be written, it will try to keep data in memory (will reset if the server restarts).
+3.  **Try Re-login**: Go back to `/` and login again.
 
-### 3. 배포 (Vercel)
-이 앱은 정적(Static) 웹사이트처럼 배포 가능합니다.
-1. GitHub에 코드 푸시.
-2. Vercel에서 프로젝트 Import.
-3. 배포 실행 (환경 변수 설정 불필요).
-4. **중요**: 배포 후 로그인 화면이 뜬다면 Vercel 설정(`Settings` > `Deployment Protection`)에서 인증 기능을 끄세요.
-
-## ⚠️ 주의사항
-- **데이터 휘발성**: **브라우저 캐시(쿠키)를 삭제하면 사용자의 획득 기록 및 관리자의 생성 기록이 모두 사라집니다.**
-- **보안**: 모든 로직이 클라이언트 사이드에 있습니다. 사용자가 악의적으로 QR 코드를 위조할 수 있으므로, 가벼운 이벤트 용도로만 사용하세요.
+### Technical Stack
+-   **Framework**: Next.js 16 (App Router)
+-   **Database**: JSON Files (in `/data`) + In-Memory Fallback
+-   **Auth**: Cookies
+-   **Scanning**: html5-qrcode

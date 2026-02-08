@@ -37,7 +37,7 @@ export async function seed() {
             question: question,
             type: isMath ? 'text' : 'choice', // Alternate types
             choices: isMath ? undefined : [`Capital${i}`, `City${i}`, `Town${i}`, `Village${i}`],
-            correctAnswer: answer,
+            answer: answer,
             points: (i + 1) * 10,
             hints: [`Hint 1 for Treasure ${i}`, `The answer starts with ${answer[0]}`],
             timeLimit: isTimed ? 30 : undefined

@@ -76,9 +76,29 @@ export default function AdminPage() {
 
   return (
     <div className="admin-container">
-      <header style={{ marginBottom: '2rem' }}>
-        <h1>Admin Portal</h1>
-        <p style={{ opacity: 0.7 }}>Generate QR codes for treasures 0-29</p>
+      <header style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1>Admin Portal</h1>
+          <p style={{ opacity: 0.7 }}>Generate QR codes for treasures 0-29</p>
+        </div>
+        <button
+          onClick={async () => {
+            if (!confirm('Are you sure you want to RESET ALL GAME DATA? This cannot be undone.')) return;
+            await fetch('/api/admin/reset', { method: 'POST' });
+            alert('Game Reset!');
+          }}
+          style={{
+            background: '#ef4444',
+            color: 'white',
+            padding: '0.5rem 1rem',
+            borderRadius: '0.5rem',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: 'bold'
+          }}
+        >
+          RESET GAME
+        </button>
       </header>
 
       <section>

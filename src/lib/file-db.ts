@@ -28,6 +28,7 @@ export interface TreasureData {
     points: number;
     hints: string[];
     timeLimit?: number;
+    active?: boolean;
 }
 
 // Ensure Data Directories Exist

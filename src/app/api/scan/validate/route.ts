@@ -44,6 +44,17 @@ export async function POST(request: Request) {
 
         console.log(`Group: ${group}, Offset: ${offset}, Target Treasure ID: ${targetId}`);
 
+        // 2.5 Check if Treasure is Active
+        const treasure = await db.getTreasure(targetId);
+        if (!treasure) return NextResponse.json({ success: false, message: 'Invalid Treasure Target' }, { status: 404 });
+
+        if (treasure.active === false) {
+            return NextResponse.json({
+                success: false,
+                message: 'This QR code is currently disabled.'
+            }, { status: 403 });
+        }
+
         // 3. Check if already found (File/Memory + Cookie)
         const groupData = await db.getGroup(group);
         let isAlreadyFound = groupData?.foundTreasures.some(t => t.treasureId === targetId);

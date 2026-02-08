@@ -1,4 +1,3 @@
-
 import { GroupData, TreasureData } from './file-db'; // Re-use interfaces
 import * as fileDb from './file-db';
 import { supabase } from './supabase';

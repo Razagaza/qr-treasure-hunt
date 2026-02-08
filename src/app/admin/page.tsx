@@ -112,14 +112,21 @@ export default function AdminPage() {
           <p className="subtitle">Manage Game & Treasures</p>
         </div>
         <div className="flex gap-4 items-center">
-          {/* Game Control Toggle */}
+          {/* Migration Button */}
           <button
-            className={`px-4 py-2 font-bold text-white rounded shadow transition-colors ${qrEnabled ? 'bg-green-600 hover:bg-green-700' : 'bg-red-500 hover:bg-red-600'
-              }`}
-            onClick={toggleGameParams}
-            disabled={loadingSettings}
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow transition-colors"
+            onClick={async () => {
+              if (!confirm('Run Data Migration (Server Files -> Supabase)?')) return;
+              try {
+                const res = await fetch('/api/admin/migrate', { method: 'POST' });
+                const json = await res.json();
+                alert('Migration Results:\n' + JSON.stringify(json.results, null, 2));
+              } catch (e) {
+                alert('Migration Failed');
+              }
+            }}
           >
-            {loadingSettings ? '...' : (qrEnabled ? 'GAME: LIVE (QR ON)' : 'GAME: PAUSED (QR OFF)')}
+            MIGRATE DATA
           </button>
 
           <button
@@ -142,7 +149,26 @@ export default function AdminPage() {
           {treasures.map((t) => (
             <div key={t.id} className="card treasure-card">
               <div className="treasure-info">
-                <h3 className="treasure-title">Treasure #{t.id}</h3>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="treasure-title">Treasure #{t.id}</h3>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const newActive = t.active === false ? true : false;
+                      setTreasures(curr => curr.map(item => item.id === t.id ? { ...item, active: newActive } : item));
+
+                      await fetch('/api/admin/treasures/update', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: t.id, active: newActive })
+                      });
+                    }}
+                    className={`text-xs px-2 py-1 rounded font-bold ${t.active !== false ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'
+                      }`}
+                  >
+                    {t.active !== false ? 'ACTIVE' : 'DISABLED'}
+                  </button>
+                </div>
                 <p className="treasure-subtitle">{t.points} Points</p>
                 <p className="treasure-question">{t.question}</p>
                 <div className="treasure-answer">A: {t.answer}</div>

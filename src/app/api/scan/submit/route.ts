@@ -13,6 +13,8 @@ export async function POST(request: Request) {
         }
 
         const group = groupCookie.value;
+        const rawUsername = cookieStore.get('treasure-username')?.value;
+        const username = rawUsername ? decodeURIComponent(rawUsername) : undefined;
 
         // 2. Get Treasure Data
         const treasure = await db.getTreasure(treasureId);
@@ -34,7 +36,8 @@ export async function POST(request: Request) {
                     groupData.foundTreasures.push({
                         treasureId,
                         score: 0, // Zero points for failure
-                        foundAt: new Date().toISOString()
+                        foundAt: new Date().toISOString(),
+                        foundBy: username
                     });
                     await db.saveGroup(group, groupData);
                 }
@@ -53,7 +56,7 @@ export async function POST(request: Request) {
 
             const response = NextResponse.json({
                 success: false,
-                message: '틀렸습니다! 힌트 2가 공개됩니다. (재도전 불가)',
+                message: 'Wrong Answer! Hint 2 is revealed. (No Resubmission)',
                 hints: treasure.hints.length > 1 ? [treasure.hints[1]] : [],
                 failedAndSaved: true // Flag for frontend
             });
@@ -76,14 +79,11 @@ export async function POST(request: Request) {
                 const pointsAwarded = treasure.points;
                 groupData.score += pointsAwarded;
 
-                // Get Username from Cookie
-                const username = cookieStore.get('treasure-username')?.value;
-
                 groupData.foundTreasures.push({
                     treasureId,
                     score: pointsAwarded,
                     foundAt: new Date().toISOString(),
-                    foundBy: username // Save username
+                    foundBy: username // Save decoded username
                 });
             }
             return groupData;

@@ -56,7 +56,7 @@ export async function POST(request: Request) {
         if (qrMapping.active === false) {
             return NextResponse.json({
                 success: false,
-                message: '꽝! 아쉽지만 다음 기회에...',
+                message: 'This is not a treasure QR code! Next time...',
                 inactive: true
             }, { status: 200 });
         }

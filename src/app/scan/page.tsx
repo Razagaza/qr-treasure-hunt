@@ -245,9 +245,9 @@ export default function ScanPage() {
       {status === 'inactive' && (
         <div className="card flex-center flex-col p-8 gap-4 text-center">
           <div className="bang-icon">💥</div>
-          <h2 className="title text-red">꽝!</h2>
+          <h2 className="title text-red">bang!</h2>
           <p className="message">{message}</p>
-          <button className="btn-primary" onClick={handleClose}>닫기</button>
+          <button className="btn-primary" onClick={handleClose}>Close</button>
         </div>
       )}
 

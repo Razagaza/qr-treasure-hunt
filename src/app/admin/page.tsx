@@ -103,7 +103,7 @@ export default function AdminPage() {
                       title={`Found at ${new Date(ft.foundAt).toLocaleTimeString()}`}
                     >
                       #{ft.treasureId}
-                      {ft.foundBy && <span className="finder-name">({ft.foundBy})</span>}
+                      {ft.foundBy && <span className="finder-name">({decodeURIComponent(ft.foundBy)})</span>}
                     </span>
                   ))}
                 </div>

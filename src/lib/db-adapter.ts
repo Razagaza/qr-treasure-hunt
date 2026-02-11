@@ -84,7 +84,7 @@ export const SupabaseAdapter: IDatabase = {
             .select('*');
 
         if (error || !data) return [];
-        return data.map(row => row.content as TreasureData);
+        return data.map((row: any) => row.content as TreasureData);
     },
 
     async saveTreasure(id: number, data: TreasureData) {

@@ -3,7 +3,7 @@ import { saveGroupData, GroupData } from '@/lib/file-db';
 
 export async function POST() {
     try {
-        const groups = ['A', 'B', 'C', 'D'];
+        const groups = ['A', 'B', 'C', 'D', 'E'];
         if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
             const { createClient } = require('@supabase/supabase-js');
             const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
@@ -13,7 +13,7 @@ export async function POST() {
             // Note: Since 'groups' table key is ID, we might need to iterate or do a bulk update if possible.
             // Supabase 'update' without 'eq' updates all rows if RLS allows, but usually requires a where clause.
             // We can just iterate the known groups.
-            const groups = ['A', 'B', 'C', 'D'];
+            const groups = ['A', 'B', 'C', 'D', 'E'];
             for (const group of groups) {
                 await supabase
                     .from('groups')
@@ -26,7 +26,7 @@ export async function POST() {
             console.log('Supabase Data Reset');
         } else {
             // File Fallback
-            const groups = ['A', 'B', 'C', 'D'];
+            const groups = ['A', 'B', 'C', 'D', 'E'];
             for (const group of groups) {
                 const initialData: GroupData = {
                     id: group,

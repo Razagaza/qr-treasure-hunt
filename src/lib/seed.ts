@@ -5,7 +5,7 @@ export async function seed() {
     await initDataDirs();
 
     // Create Groups
-    const groups = ['A', 'B', 'C', 'D'];
+    const groups = ['A', 'B', 'C', 'D', 'E'];
     for (const group of groups) {
         const initialData: GroupData = {
             id: group,

@@ -7,6 +7,7 @@ interface GroupStatus {
   id: string;
   score: number;
   foundCount: number;
+  foundTreasures: { treasureId: number; score: number; foundAt: string; foundBy?: string }[];
 }
 
 export default function AdminPage() {
@@ -90,6 +91,25 @@ export default function AdminPage() {
                   <span className="stat-label">Treasures</span>
                 </div>
               </div>
+            </div>
+
+            <div className="treasures-list">
+              {group.foundTreasures && group.foundTreasures.length > 0 ? (
+                <div className="treasure-grid">
+                  {group.foundTreasures.sort((a, b) => a.treasureId - b.treasureId).map((ft) => (
+                    <span
+                      key={ft.treasureId}
+                      className="treasure-badge"
+                      title={`Found at ${new Date(ft.foundAt).toLocaleTimeString()}`}
+                    >
+                      #{ft.treasureId}
+                      {ft.foundBy && <span className="finder-name">({ft.foundBy})</span>}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-treasures">No treasures found yet</div>
+              )}
             </div>
           </div>
         ))}
@@ -207,6 +227,40 @@ export default function AdminPage() {
             font-size: 0.75rem;
             opacity: 0.6;
             text-transform: uppercase;
+        }
+
+        .treasures-list {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .treasure-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .treasure-badge {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        .finder-name {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            color: #a7f3d0;
+            font-weight: normal;
+        }
+        .no-treasures {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.3);
+            text-align: center;
+            font-style: italic;
         }
 
         .flex-center { display: flex; align-items: center; justify-content: center; height: 100vh; }

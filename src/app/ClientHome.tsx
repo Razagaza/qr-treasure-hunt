@@ -11,7 +11,7 @@ export default function ClientHome() {
     const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const groups = ['A', 'B', 'C', 'D'];
+    const groups = ['A', 'B', 'C', 'D', 'E'];
 
     const handleReset = async () => {
         if (!confirm('Are you sure you want to reset your local session?')) return;
@@ -185,6 +185,19 @@ export default function ClientHome() {
                     opacity: 0.8;
                 }
 
+                .reset-link {
+                    background: none;
+                    border: none;
+                    color: rgba(255, 255, 255, 0.3);
+                    font-size: 0.75rem;
+                    margin-top: 1rem;
+                    cursor: pointer;
+                    text-decoration: underline;
+                }
+                .reset-link:hover {
+                    color: rgba(255, 255, 255, 0.6);
+                }
+
                 .form-card {
                     background: rgba(255, 255, 255, 0.05);
                     backdrop-filter: blur(20px);
@@ -342,3 +355,4 @@ export default function ClientHome() {
         </div>
     );
 }
+

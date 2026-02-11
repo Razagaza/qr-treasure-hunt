@@ -3,7 +3,7 @@ import { db } from '@/lib/db-adapter';
 
 export async function GET() {
     try {
-        const groups = ['A', 'B', 'C', 'D'];
+        const groups = ['A', 'B', 'C', 'D', 'E'];
         const status = [];
 
         for (const groupId of groups) {

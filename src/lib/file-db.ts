@@ -16,7 +16,7 @@ const TREASURES_DIR = path.join(DATA_DIR, 'treasures');
 export interface GroupData {
     id: string;
     score: number;
-    foundTreasures: { treasureId: number; score: number; foundAt: string }[];
+    foundTreasures: { treasureId: number; score: number; foundAt: string; foundBy?: string }[];
 }
 
 export interface TreasureData {
@@ -101,7 +101,7 @@ async function _getGroupDataInternal(groupId: string): Promise<GroupData | null>
         return parsed;
     } catch (error: any) {
         // Fallback
-        if (['A', 'B', 'C', 'D'].includes(groupId)) {
+        if (['A', 'B', 'C', 'D', 'E'].includes(groupId)) {
             const initialData: GroupData = {
                 id: groupId,
                 score: 0,

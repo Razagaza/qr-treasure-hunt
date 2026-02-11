@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Trophy, Home, Search, Loader2, ScanLine } from 'lucide-react';
+import { Trophy, Home, Search, Loader2, ScanLine, Clock } from 'lucide-react';
 
 interface FoundTreasure {
   treasureId: number;
@@ -65,13 +65,6 @@ export default function Dashboard() {
           <h1 className="title">Team {data.group}</h1>
           <div className="user-info">
             {data.username && <span className="username">Agent {data.username}</span>}
-            <button onClick={() => {
-              if (confirm('Reset session?')) {
-                fetch('/api/auth/logout', { method: 'POST' }).then(() => window.location.href = '/');
-              }
-            }} className="reset-btn">
-              Reset
-            </button>
           </div>
         </div>
         <div className="score-card">
@@ -142,13 +135,22 @@ export default function Dashboard() {
 
       {/* Footer Nav */}
       <div className="footer-nav">
-        <button
-          onClick={() => router.push('/scan')}
-          className="scan-btn"
-        >
-          <ScanLine size={28} />
-          Scan Treasure
-        </button>
+        <div className="nav-grid">
+          <button
+            onClick={() => router.push('/schedule')}
+            className="nav-btn secondary-btn"
+          >
+            <Clock size={24} />
+            Schedule
+          </button>
+          <button
+            onClick={() => router.push('/scan')}
+            className="nav-btn primary-btn"
+          >
+            <ScanLine size={24} />
+            Scan
+          </button>
+        </div>
       </div>
 
       <style jsx>{`
@@ -335,28 +337,42 @@ export default function Dashboard() {
             bottom: 2rem;
             left: 50%;
             transform: translateX(-50%);
-            width: calc(100% - 3rem);
-            max-width: 460px;
+            width: calc(100% - 2rem);
+            max-width: 480px;
             z-index: 10;
         }
-        .scan-btn {
-            width: 100%;
-            padding: 1.25rem;
+        .nav-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 1rem;
+        }
+        .nav-btn {
+            padding: 1rem;
             border-radius: 1rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
             border: none;
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
+            gap: 0.5rem;
             cursor: pointer;
-            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.5);
             transition: transform 0.2s;
         }
-        .scan-btn:active { transform: scale(0.98); }
+        .nav-btn:active { transform: scale(0.96); }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.5);
+        }
+        .secondary-btn {
+            background: rgba(30, 41, 59, 0.9);
+            color: #e2e8f0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
 
         .flex-center { display: flex; align-items: center; justify-content: center; height: 100vh; }
         .animate-spin { animation: spin 1s linear infinite; }

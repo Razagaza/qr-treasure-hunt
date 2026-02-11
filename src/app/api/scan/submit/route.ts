@@ -75,10 +75,15 @@ export async function POST(request: Request) {
             if (!groupData.foundTreasures.some((t: any) => t.treasureId === treasureId)) {
                 const pointsAwarded = treasure.points;
                 groupData.score += pointsAwarded;
+
+                // Get Username from Cookie
+                const username = cookieStore.get('treasure-username')?.value;
+
                 groupData.foundTreasures.push({
                     treasureId,
                     score: pointsAwarded,
-                    foundAt: new Date().toISOString()
+                    foundAt: new Date().toISOString(),
+                    foundBy: username // Save username
                 });
             }
             return groupData;

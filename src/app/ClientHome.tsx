@@ -13,11 +13,7 @@ export default function ClientHome() {
 
     const groups = ['A', 'B', 'C', 'D', 'E'];
 
-    const handleReset = async () => {
-        if (!confirm('Are you sure you want to reset your local session?')) return;
-        await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/'; // Hard reload to clear state
-    };
+
 
     const handleGroupSelect = (selectedGroup: string) => {
         setGroup(selectedGroup);
@@ -56,9 +52,7 @@ export default function ClientHome() {
                     </div>
                     <h1 className="title">Treasure Hunt</h1>
                     <p className="subtitle">Select your team to begin the hunt!</p>
-                    <button onClick={handleReset} className="reset-link">
-                        Reset Session
-                    </button>
+
                 </div>
 
                 <div className="card form-card">
@@ -185,18 +179,7 @@ export default function ClientHome() {
                     opacity: 0.8;
                 }
 
-                .reset-link {
-                    background: none;
-                    border: none;
-                    color: rgba(255, 255, 255, 0.3);
-                    font-size: 0.75rem;
-                    margin-top: 1rem;
-                    cursor: pointer;
-                    text-decoration: underline;
-                }
-                .reset-link:hover {
-                    color: rgba(255, 255, 255, 0.6);
-                }
+
 
                 .form-card {
                     background: rgba(255, 255, 255, 0.05);

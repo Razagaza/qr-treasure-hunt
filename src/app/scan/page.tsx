@@ -232,7 +232,7 @@ export default function ScanPage() {
             <div className="hints-box">
               <h3 className="hints-title">Hint Unlocked:</h3>
               {hints.map((h: string, i: number) => (
-                <p key={i} className="hint-item">💡 {h}</p>
+                <p key={i} className="hint-item">{h}</p>
               ))}
             </div>
           )}

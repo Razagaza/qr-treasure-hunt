@@ -124,7 +124,6 @@ export default function Dashboard() {
               <p className="field-label">Unlocked Hints:</p>
               {selectedTreasure.hints?.map((h, i) => (
                 <div key={i} className="hint-row">
-                  <span className="hint-icon">💡</span>
                   <span className="hint-text">{h}</span>
                 </div>
               ))}

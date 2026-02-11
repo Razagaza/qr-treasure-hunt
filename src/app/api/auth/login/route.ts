@@ -5,7 +5,7 @@ export async function POST(request: Request) {
     try {
         const { group, username } = await request.json();
 
-        if (!['A', 'B', 'C', 'D'].includes(group)) {
+        if (!['A', 'B', 'C', 'D', 'E'].includes(group)) {
             return NextResponse.json({ success: false, message: 'Invalid group' }, { status: 400 });
         }
 

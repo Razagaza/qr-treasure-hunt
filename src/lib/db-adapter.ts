@@ -21,6 +21,9 @@ export interface IDatabase {
     // Game Settings
     getGameSettings(key: string): Promise<any>;
     updateGameSettings(key: string, value: any): Promise<void>;
+
+    // Schedule
+    getSchedule(): Promise<any[]>;
 }
 
 // --- Supabase Adapter ---
@@ -157,6 +160,16 @@ export const SupabaseAdapter: IDatabase = {
             .from('game_settings')
             .upsert({ key, value });
         if (error) console.error('Supabase SaveSettings Error:', error);
+    },
+
+    async getSchedule() {
+        const { data, error } = await supabase
+            .from('schedules')
+            .select('*')
+            .order('time', { ascending: true });
+
+        if (error || !data) return [];
+        return data;
     }
 };
 
@@ -182,9 +195,13 @@ export const FileAdapter: IDatabase = {
         if (key === 'qr_enabled') return true;
         return null;
     },
-    updateGameSettings: async (key: string, value: any) => {
+    async updateGameSettings(key: string, value: any) {
         // No-op for file db
         console.log(`[FileDB] Mock update setting ${key} = ${value}`);
+    },
+
+    async getSchedule() {
+        return [];
     }
 };
 
@@ -192,6 +209,8 @@ export const FileAdapter: IDatabase = {
 // Default to Supabase, fallback provided via config if needed
 // For now, we will try Supabase, if it fails (e.g. no env vars), we might fallback,
 // but typically we want to be explicit.
-const USE_SUPABASE = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
+import { isSupabaseEnabled } from './supabase';
+
+const USE_SUPABASE = isSupabaseEnabled;
 
 export const db: IDatabase = USE_SUPABASE ? SupabaseAdapter : FileAdapter;

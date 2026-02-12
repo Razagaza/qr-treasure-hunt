@@ -1,11 +1,30 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Clock } from 'lucide-react';
 
 export default function SchedulePage() {
     const router = useRouter();
-    const scheduleData = require('../../lib/schedule.json');
+    const [scheduleData, setScheduleData] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await fetch('/api/schedule');
+                const data = await res.json();
+                if (data.success) {
+                    setScheduleData(data.schedule);
+                }
+            } catch (error) {
+                console.error('Failed to fetch schedule:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
 
     return (
         <div className="page-container">
@@ -21,24 +40,30 @@ export default function SchedulePage() {
             </header>
 
             <div className="card schedule-card">
-                <table className="schedule-table">
-                    <thead>
-                        <tr>
-                            <th>Time</th>
-                            <th>1동</th>
-                            <th>3동</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {scheduleData.map((row: any, i: number) => (
-                            <tr key={i}>
-                                <td className="time-col">{row.time}</td>
-                                <td>{row.room1}</td>
-                                <td>{row.room3}</td>
+                {loading ? (
+                    <div className="loading-state">Loading schedule...</div>
+                ) : scheduleData.length > 0 ? (
+                    <table className="schedule-table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>1동</th>
+                                <th>3동</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {scheduleData.map((row: any, i: number) => (
+                                <tr key={i}>
+                                    <td className="time-col">{row.time}</td>
+                                    <td>{row.room1}</td>
+                                    <td>{row.room3}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <div className="empty-state">No schedule available.</div>
+                )}
             </div>
 
             <style jsx>{`
@@ -116,6 +141,12 @@ export default function SchedulePage() {
                     font-weight: bold;
                     color: #fde047;
                     width: 80px;
+                }
+                .loading-state, .empty-state {
+                    text-align: center;
+                    padding: 2rem;
+                    color: rgba(255, 255, 255, 0.5);
+                    font-style: italic;
                 }
             `}</style>
         </div>

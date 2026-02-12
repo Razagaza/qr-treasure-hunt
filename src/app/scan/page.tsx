@@ -162,7 +162,7 @@ export default function ScanPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           treasureId: treasure.id,
-          answer: answer
+          answer: answer // Note: if coming from event listener, ensure 'answer' is current
         }),
       });
 
@@ -187,6 +187,51 @@ export default function ScanPage() {
       setMessage('Submission failed');
     }
   };
+
+  // Keep handleSubmit fresh for event listeners
+  const handleSubmitRef = useRef(handleSubmit);
+  useEffect(() => {
+    handleSubmitRef.current = handleSubmit;
+  });
+
+  // --- 6. Back Button & Unload Handling ---
+  useEffect(() => {
+    // Only active if solving and treasure has a time limit
+    const isTimed = status === 'solving' && treasure?.timeLimit !== undefined && treasure.timeLimit > 0;
+
+    if (isTimed) {
+      // 1. Push a history state to trap the back button
+      // We push a state so that when user clicks back, they pop this state but stay on the page (conceptually)
+      // Then we detect that pop and submit.
+      window.history.pushState({ solving: true }, '', window.location.href);
+
+      const handlePopState = (event: PopStateEvent) => {
+        // User pressed back button
+        // Prevent default navigation if possible (not really possible to cancel popstate fully without pushing again)
+        // But more importantly: AUTO SUBMIT
+        handleSubmitRef.current();
+      };
+
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        // User tried to reload or close tab
+        // We can't guarantee async fetch will complete, but we can try.
+        // We also show a confirmation dialog (standard browser behavior requires setting returnValue)
+        e.preventDefault();
+        e.returnValue = '';
+
+        // Attempt submit
+        handleSubmitRef.current();
+      };
+
+      window.addEventListener('popstate', handlePopState);
+      window.addEventListener('beforeunload', handleBeforeUnload);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
+    }
+  }, [status, treasure]); // Re-run if status matches.
 
   const handleClose = () => {
     // Reset Everything

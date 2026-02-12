@@ -262,7 +262,10 @@ export default function ScanPage() {
               <p key={i} className="hint-item">{h}</p>
             ))}
           </div>
-          <button className="btn-primary" onClick={handleClose}>Scan Next</button>
+          <div className="action-buttons">
+            <button className="btn-secondary" onClick={() => router.push('/dashboard')}>Dashboard</button>
+            <button className="btn-primary" onClick={handleClose}>Scan Next</button>
+          </div>
         </div>
       )}
 

@@ -197,19 +197,22 @@ export default function ScanPage() {
 
   // --- Render Helpers ---
   const isInputValid = answer.trim().length > 0;
-  const isTimerActive = timeLeft !== null && timeLeft > 0;
+  // Determine if this is a timed challenge
+  const isTimeLimited = timeLeft !== null; // If timeLeft is not null, it's a timed treasure
 
   return (
     <div className="scan-container">
-      {/* Header with Back Button */}
-      <div className="back-button-wrapper">
-        <button
-          onClick={() => router.push('/dashboard')}
-          className="back-btn"
-        >
-          <ArrowLeft size={20} />
-        </button>
-      </div>
+      {/* Header with Back Button - Hidden if Solving Checks & Timed */}
+      {!(status === 'solving' && isTimeLimited) && (
+        <div className="back-button-wrapper">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="back-btn"
+          >
+            <ArrowLeft size={20} />
+          </button>
+        </div>
+      )}
       <div id="reader" style={{ display: status === 'scanning' ? 'block' : 'none', marginTop: '3rem' }}></div>
 
       {/* Loading / Validating */}
@@ -281,7 +284,7 @@ export default function ScanPage() {
               </div>
             )}
             {/* Show Close button in header if Unlimited Time (timeLeft is null) */}
-            {timeLeft === null && (
+            {!isTimeLimited && (
               <button onClick={handleClose} className="p-1 rounded-full hover:bg-slate-700">
                 <X size={20} className="text-gray-400" />
               </button>
@@ -319,13 +322,14 @@ export default function ScanPage() {
           )}
 
           <div className="action-buttons">
-            <button
-              className="btn-secondary"
-              onClick={handleClose}
-              disabled={isTimerActive}
-            >
-              {timeLeft !== null && timeLeft > 0 ? `${timeLeft}s` : 'Close'}
-            </button>
+            {!isTimeLimited && (
+              <button
+                className="btn-secondary"
+                onClick={handleClose}
+              >
+                Close
+              </button>
+            )}
             <button
               className="btn-primary"
               onClick={handleSubmit}
@@ -336,8 +340,19 @@ export default function ScanPage() {
           </div>
         </div>
       )}
+      <button
+        className="btn-primary"
+        onClick={handleSubmit}
+        disabled={!isInputValid}
+      >
+        Submit
+      </button>
+    </div>
+        </div >
+      )
+}
 
-      <style jsx>{`
+<style jsx>{`
          .scan-container {
              max-width: 500px;
              margin: 0 auto;
@@ -504,6 +519,6 @@ export default function ScanPage() {
             to { transform: scale(1.2); }
         }
       `}</style>
-    </div>
+    </div >
   );
 }

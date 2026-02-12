@@ -291,12 +291,7 @@ export default function ScanPage() {
             )}
           </div>
 
-          <h2 className="question-text">{treasure.question.split('\\n').map((line, i) => (
-            <span key={i}>
-              {line}
-              {i < treasure.question.split('\\n').length - 1 && <br />}
-            </span>
-          ))}</h2>
+          <h2 className="question-text" dangerouslySetInnerHTML={{ __html: treasure.question.replace(/\\n/g, '<br />') }}></h2>
 
           {treasure.type === 'choice' && treasure.choices ? (
             <div className="choices-list">
@@ -340,19 +335,9 @@ export default function ScanPage() {
           </div>
         </div>
       )}
-      <button
-        className="btn-primary"
-        onClick={handleSubmit}
-        disabled={!isInputValid}
-      >
-        Submit
-      </button>
-    </div>
-        </div >
-      )
-}
 
-<style jsx>{`
+
+      <style jsx>{`
          .scan-container {
              max-width: 500px;
              margin: 0 auto;

@@ -23,8 +23,19 @@ export async function POST(request: Request) {
             return NextResponse.json({ success: false, message: 'Treasure not found' }, { status: 404 });
         }
 
-        // Validate Answer (Case insensitive)
-        const isCorrect = treasure.answer.trim().toLowerCase() === answer.trim().toLowerCase();
+        // Validate Answer
+        let isCorrect = false;
+
+        if (treasure.type === 'text') {
+            // Flexible Matching: Supports multiple keywords separated by '|'
+            // and checks if user input CONTAINS any of them.
+            const validKeywords = treasure.answer.split('|').map(k => k.trim().toLowerCase()).filter(k => k.length > 0);
+            const userAnswer = answer.trim().toLowerCase();
+            isCorrect = validKeywords.some(keyword => userAnswer.includes(keyword));
+        } else {
+            // Strict Matching for 'number', 'choice'
+            isCorrect = treasure.answer.trim().toLowerCase() === answer.trim().toLowerCase();
+        }
 
         if (!isCorrect) {
             // "One Strike" Logic: Failure = Found with 0 Score

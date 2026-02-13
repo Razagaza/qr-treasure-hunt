@@ -352,8 +352,8 @@ export default function ScanPage() {
             </div>
           ) : (
             <input
-              type={treasure.type === 'number' ? 'text' : 'text'}
-              inputMode="decimal"
+              type={treasure.type === 'number' ? 'number' : 'text'}
+              inputMode={treasure.type === 'number' ? 'numeric' : 'text'}
               className="text-input"
               placeholder={treasure.type === 'number' ? 'Enter number...' : 'Enter your answer...'}
               value={answer}
